@@ -1,7 +1,5 @@
 # AI Media Search Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** A wordpress.org plugin that describes every image and PDF preview with a vision model and makes the Media Library search box match that text, so "woman on a beach" finds the photo.
 
 **Architecture:** On upload, a WP-Cron event runs an indexer that picks a reasonably sized copy of the file, sends it to the configured provider (Claude, OpenAI, or Gemini) with a shared JSON-schema prompt, and stores description, tags, and alt in post meta plus one combined `_aims_search_text` row. `posts_join` and `posts_search` filters extend every attachment search to that meta row. A top-level admin page holds a Dashboard tab (stat cards, paginated asset table, batch indexing with progress) and a Settings tab.
