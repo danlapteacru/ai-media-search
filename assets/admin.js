@@ -170,7 +170,7 @@
 		document.getElementById( 'aims-stop' ).disabled = ! running;
 	}
 
-	function runBatch( ids, total, done ) {
+	function runBatch( ids, total, done, afterId ) {
 		if ( state.stop ) {
 			finish( i18n.stopped );
 			return;
@@ -181,6 +181,8 @@
 		};
 		if ( ids ) {
 			body.ids = ids;
+		} else {
+			body.after_id = afterId;
 		}
 		api( 'bulk', body ).then( function ( json ) {
 			json.results.forEach( function ( item ) {
@@ -195,15 +197,18 @@
 					finish( i18n.done );
 					return;
 				}
-				runBatch( json.remaining_ids, total, done );
+				runBatch( json.remaining_ids, total, done, afterId );
 			} else {
+				if ( json.last_id > afterId ) {
+					afterId = json.last_id;
+				}
 				total = done + json.remaining_count;
 				setProgress( done, total );
 				if ( json.remaining_count === 0 || json.results.length === 0 ) {
 					finish( i18n.done );
 					return;
 				}
-				runBatch( null, total, done );
+				runBatch( null, total, done, afterId );
 			}
 		} ).catch( function ( err ) {
 			log( { id: '-', ok: false, error: err.message } );
@@ -225,7 +230,7 @@
 		setProgress( 0, ids ? ids.length : 0 );
 		state.stop = false;
 		setRunning( true );
-		runBatch( ids, ids ? ids.length : 0, 0 );
+		runBatch( ids, ids ? ids.length : 0, 0, 0 );
 	}
 
 	var indexSelected = document.getElementById( 'aims-index-selected' );

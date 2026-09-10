@@ -21,4 +21,9 @@ class RestTest extends TestCase {
 		$this->assertTrue( Rest::is_explicit_mode( $with_ids ) );
 		$this->assertFalse( Rest::is_explicit_mode( $without_ids ) );
 	}
+
+	public function test_max_id() {
+		$this->assertSame( 0, Rest::max_id( array() ) );
+		$this->assertSame( 9, Rest::max_id( array( array( 'id' => 3 ), array( 'id' => 9 ), array( 'id' => 5 ) ) ) );
+	}
 }

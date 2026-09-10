@@ -64,16 +64,24 @@ final class Stats {
 	/**
 	 * @return int[]
 	 */
-	public static function next_ids( int $limit, bool $retry_failed ): array {
+	public static function next_ids( int $limit, bool $retry_failed, int $after_id = 0 ): array {
 		global $wpdb;
 		$limit = max( 1, $limit );
-		$sql   = 'SELECT p.ID ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' ) . ' ORDER BY p.ID ASC LIMIT %d';
-		$ids   = $wpdb->get_col( $wpdb->prepare( $sql, $limit ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same base query as counts(); LIMIT now goes through $wpdb->prepare().
+		$sql   = 'SELECT p.ID ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' );
+		if ( $after_id > 0 ) {
+			$sql .= $wpdb->prepare( ' AND p.ID > %d', $after_id );
+		}
+		$sql .= ' ORDER BY p.ID ASC LIMIT %d';
+		$ids  = $wpdb->get_col( $wpdb->prepare( $sql, $limit ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same base query as counts(); the after_id and LIMIT clauses each go through $wpdb->prepare().
 		return array_map( 'intval', (array) $ids );
 	}
 
-	public static function remaining_count( bool $retry_failed ): int {
+	public static function remaining_count( bool $retry_failed, int $after_id = 0 ): int {
 		global $wpdb;
-		return (int) $wpdb->get_var( 'SELECT COUNT(*) ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same status_where() clause as next_ids(); all literals are class constants or prepared.
+		$sql = 'SELECT COUNT(*) ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' );
+		if ( $after_id > 0 ) {
+			$sql = $wpdb->prepare( $sql . ' AND p.ID > %d', $after_id ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Same status_where() clause as next_ids(); the after_id clause goes through $wpdb->prepare().
+		}
+		return (int) $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same status_where() clause as next_ids(); all literals are class constants or prepared.
 	}
 }

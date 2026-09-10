@@ -45,6 +45,7 @@ final class Rest {
 				'args'                => array(
 					'ids'          => array(
 						'type'     => 'array',
+						'items'    => array( 'type' => 'integer' ),
 						'required' => false,
 					),
 					'batch_size'   => array(
@@ -55,6 +56,11 @@ final class Rest {
 						'type'     => 'boolean',
 						'required' => false,
 						'default'  => false,
+					),
+					'after_id'     => array(
+						'type'     => 'integer',
+						'required' => false,
+						'default'  => 0,
 					),
 				),
 			)
@@ -148,6 +154,20 @@ final class Rest {
 	}
 
 	/**
+	 * @param array $results Result payloads from result_for().
+	 */
+	public static function max_id( array $results ): int {
+		$max = 0;
+		foreach ( $results as $result ) {
+			$id = (int) ( $result['id'] ?? 0 );
+			if ( $id > $max ) {
+				$max = $id;
+			}
+		}
+		return $max;
+	}
+
+	/**
 	 * @param \WP_REST_Request $request Request.
 	 */
 	public function bulk( $request ) {
@@ -156,6 +176,7 @@ final class Rest {
 		$retry_failed  = ! empty( $request['retry_failed'] );
 		$explicit_mode = self::is_explicit_mode( $request );
 		$explicit      = $explicit_mode ? self::normalize_ids( $request['ids'] ?? null ) : array();
+		$after_id      = $explicit_mode ? 0 : (int) ( $request['after_id'] ?? 0 );
 
 		if ( $explicit_mode ) {
 			// The client named ids explicitly, even if the list normalizes to
@@ -164,7 +185,7 @@ final class Rest {
 			$ids       = array_slice( $explicit, 0, $batch_size );
 			$remaining = array_slice( $explicit, $batch_size );
 		} else {
-			$ids       = Stats::next_ids( $batch_size, $retry_failed );
+			$ids       = Stats::next_ids( $batch_size, $retry_failed, $after_id );
 			$remaining = array();
 		}
 
@@ -184,7 +205,8 @@ final class Rest {
 			array(
 				'results'         => $results,
 				'remaining_ids'   => array_values( $remaining ),
-				'remaining_count' => $explicit_mode ? count( $remaining ) : Stats::remaining_count( $retry_failed ),
+				'remaining_count' => $explicit_mode ? count( $remaining ) : Stats::remaining_count( $retry_failed, max( $after_id, self::max_id( $results ) ) ),
+				'last_id'         => self::max_id( $results ),
 				'stats'           => Stats::counts(),
 			)
 		);

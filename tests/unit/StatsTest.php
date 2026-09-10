@@ -61,4 +61,20 @@ class StatsTest extends TestCase {
 		$this->assertSame( 7, Stats::remaining_count( true ) );
 		$this->assertStringContainsString( "m.meta_value = 'failed'", $GLOBALS['wpdb']->last_sql );
 	}
+
+	public function test_next_ids_with_cursor_adds_id_filter() {
+		Stats::next_ids( 2, false, 41 );
+		$this->assertStringContainsString( 'p.ID > 41', $GLOBALS['wpdb']->last_sql );
+		$this->assertStringContainsString( 'LIMIT 2', $GLOBALS['wpdb']->last_sql );
+	}
+
+	public function test_next_ids_without_cursor_has_no_id_filter() {
+		Stats::next_ids( 2, false );
+		$this->assertStringNotContainsString( 'p.ID >', $GLOBALS['wpdb']->last_sql );
+	}
+
+	public function test_remaining_count_with_cursor_adds_id_filter() {
+		Stats::remaining_count( true, 41 );
+		$this->assertStringContainsString( 'p.ID > 41', $GLOBALS['wpdb']->last_sql );
+	}
 }
