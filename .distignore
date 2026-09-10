@@ -1,5 +1,6 @@
 /.git
 /.github
+/.superpowers
 /vendor
 /tests
 /docs
@@ -12,3 +13,5 @@ composer.lock
 phpunit.xml.dist
 phpcs.xml.dist
 .phpunit.result.cache
+.phpcs.cache
+*.zip
