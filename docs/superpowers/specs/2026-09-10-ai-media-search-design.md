@@ -1,92 +1,92 @@
-     1	# AI Media Search — Design
-     2	
-     3	Date: 2026-09-10
-     4	Status: approved in discussion, pending written review
-     5	
-     6	## Problem
-     7	
-     8	The WordPress Media Library search box only matches an attachment's title, caption,
-     9	and description. Typing "woman" returns nothing unless someone typed that word into a
-    10	field. Nothing on wordpress.org fixes this: alt-text generators never touch search,
-    11	"Media Search Enhanced" only widens the text fields searched, and "Media Library
-    12	Organizer" auto-categorizes but leaves the search box alone.
-    13	
-    14	## Goal
-    15	
-    16	A wordpress.org plugin that makes the Media Library search work like Photos on a
-    17	phone: the site owner types "woman on a beach" and gets images whose pixels match,
-    18	without ever having written that text.
-    19	
-    20	## Decisions taken
-    21	
-    22	| Decision | Choice |
-    23	|---|---|
-    24	| Matching approach | Vision-model descriptions and tags in post meta, matched by keyword. No embeddings in v1. |
-    25	| Providers | Anthropic Claude, OpenAI, Google Gemini. Site owner picks one. |
-    26	| Model | Per-provider dropdown in settings with cost hints and a "custom ID" entry. Site owner chooses. |
-    27	| Audience | Public wordpress.org release. Follow plugin review guidelines. |
-    28	| Indexing trigger | Automatic on upload via WP-Cron, plus a browser-driven bulk indexer for the existing library. |
-    29	| Alt text | Optional, off by default: fill an empty alt field with the model's alt sentence. |
-    30	| Visibility | Editable "AI description" field on the attachment details sidebar and edit page, with Regenerate. |
-    31	| File types | Images (jpeg, png, gif, webp) and PDFs via the first-page preview WP generates. |
-    32	| Admin UI | Own top-level menu page "AI Media Search" with two tabs, Dashboard and Settings, modeled on the "AI Alt-Text Generator" plugin's layout (stat cards as filters, paginated asset table, select rows, run with progress bar). |
+# AI Media Search — Design
+
+Date: 2026-09-10
+Status: approved in discussion, pending written review
+
+## Problem
+
+The WordPress Media Library search box only matches an attachment's title, caption,
+and description. Typing "woman" returns nothing unless someone typed that word into a
+field. Nothing on wordpress.org fixes this: alt-text generators never touch search,
+"Media Search Enhanced" only widens the text fields searched, and "Media Library
+Organizer" auto-categorizes but leaves the search box alone.
+
+## Goal
+
+A wordpress.org plugin that makes the Media Library search work like Photos on a
+phone: the site owner types "woman on a beach" and gets images whose pixels match,
+without ever having written that text.
+
+## Decisions taken
+
+| Decision | Choice |
+|---|---|
+| Matching approach | Vision-model descriptions and tags in post meta, matched by keyword. No embeddings in v1. |
+| Providers | Anthropic Claude, OpenAI, Google Gemini. Site owner picks one. |
+| Model | Per-provider dropdown in settings with cost hints and a "custom ID" entry. Site owner chooses. |
+| Audience | Public wordpress.org release. Follow plugin review guidelines. |
+| Indexing trigger | Automatic on upload via WP-Cron, plus a browser-driven bulk indexer for the existing library. |
+| Alt text | Optional, off by default: fill an empty alt field with the model's alt sentence. |
+| Visibility | Editable "AI description" field on the attachment details sidebar and edit page, with Regenerate. |
+| File types | Images (jpeg, png, gif, webp) and PDFs via the first-page preview WP generates. |
+| Admin UI | Own top-level menu page "AI Media Search" with two tabs, Dashboard and Settings, modeled on the "AI Alt-Text Generator" plugin's layout (stat cards as filters, paginated asset table, select rows, run with progress bar). |
 | Custom prompt | Optional textarea in settings. Its text is appended to the built-in prompt as extra guidance. |
 | Storage | Post meta plus `posts_join` / `posts_search` filters. No custom tables. |
-    33	| Background work | WP-Cron single events for uploads; REST-driven batches for bulk. No Action Scheduler. |
-    34	| HTTP | WordPress HTTP API (`wp_remote_post`) for all providers. No vendored SDKs. |
-    35	
-    36	## Out of scope for v1
-    37	
-    38	Video and audio, frontend search, embeddings or vector search, folders or
-    39	categories, API key encryption, multisite network-level settings (per-site settings
-    40	work as normal), and any provider beyond the three above.
-    41	
-    42	## Naming
-    43	
-    44	- Slug and text domain: `ai-media-search` (checked free on wordpress.org on 2026-09-10)
-    45	- Function and hook prefix: `aims_`
-    46	- PHP namespace: `AIMS`
-    47	- Option name: `aims_settings` (single array)
-    48	- Meta key prefix: `_aims_`
-    49	- REST namespace: `aims/v1`
-    50	- Requirements: PHP 7.4+, WordPress 6.0+
-    51	
-    52	## Architecture
-    53	
-    54	```
-    55	upload ──► add_attachment ──► Queue (schedule cron +10s)
-    56	                                   │
-    57	                            cron: aims_index_attachment
-    58	                                   │
-    59	                                   ▼
-    60	   Regenerate button ──► REST ──► Indexer ──► Image_Preparer ──► file path + mime
-    61	   Dashboard buttons ──► REST ──►    │
-    62	                                     ├──► Provider::describe() ──► Description_Result
-    63	                                     │
-    64	                                     └──► post meta (_aims_*), optional alt text
-    65	
-    66	search box "woman" ──► WP_Query(post_type=attachment, s=woman)
-    67	                            │
-    68	                            ▼
-    69	                    Search filters: LEFT JOIN postmeta _aims_search_text,
-    70	                    rewrite each title clause to also match that meta
-    71	```
-    72	
-    73	## Components
-    74	
-    75	### Bootstrap — `ai-media-search.php`, `uninstall.php`
-    76	
-    77	Plugin header, constants (version, path, URL), a small PSR-4 autoloader for the
-    78	`AIMS\` namespace under `includes/`, and instantiation of `AIMS\Plugin` on
-    79	`plugins_loaded`. Activation registers nothing heavy. Deactivation clears scheduled
-    80	`aims_index_attachment` events. `uninstall.php` deletes `aims_settings` and every
-    81	`_aims_*` meta row.
-    82	
-    83	### `AIMS\Plugin`
-    84	
-    85	Wires every other component's hooks. No logic of its own.
-    86	
-    87	### `AIMS\Settings` — option registration
+| Background work | WP-Cron single events for uploads; REST-driven batches for bulk. No Action Scheduler. |
+| HTTP | WordPress HTTP API (`wp_remote_post`) for all providers. No vendored SDKs. |
+
+## Out of scope for v1
+
+Video and audio, frontend search, embeddings or vector search, folders or
+categories, API key encryption, multisite network-level settings (per-site settings
+work as normal), and any provider beyond the three above.
+
+## Naming
+
+- Slug and text domain: `ai-media-search` (checked free on wordpress.org on 2026-09-10)
+- Function and hook prefix: `aims_`
+- PHP namespace: `AIMS`
+- Option name: `aims_settings` (single array)
+- Meta key prefix: `_aims_`
+- REST namespace: `aims/v1`
+- Requirements: PHP 7.4+, WordPress 6.0+
+
+## Architecture
+
+```
+upload ──► add_attachment ──► Queue (schedule cron +10s)
+                                   │
+                            cron: aims_index_attachment
+                                   │
+                                   ▼
+   Regenerate button ──► REST ──► Indexer ──► Image_Preparer ──► file path + mime
+   Dashboard buttons ──► REST ──►    │
+                                     ├──► Provider::describe() ──► Description_Result
+                                     │
+                                     └──► post meta (_aims_*), optional alt text
+
+search box "woman" ──► WP_Query(post_type=attachment, s=woman)
+                            │
+                            ▼
+                    Search filters: LEFT JOIN postmeta _aims_search_text,
+                    rewrite each title clause to also match that meta
+```
+
+## Components
+
+### Bootstrap — `ai-media-search.php`, `uninstall.php`
+
+Plugin header, constants (version, path, URL), a small PSR-4 autoloader for the
+`AIMS\` namespace under `includes/`, and instantiation of `AIMS\Plugin` on
+`plugins_loaded`. Activation registers nothing heavy. Deactivation clears scheduled
+`aims_index_attachment` events. `uninstall.php` deletes `aims_settings` and every
+`_aims_*` meta row.
+
+### `AIMS\Plugin`
+
+Wires every other component's hooks. No logic of its own.
+
+### `AIMS\Settings` — option registration
 
 Registers the single `aims_settings` option with the Settings API and sanitizes it.
 Keys and defaults:
@@ -165,24 +165,24 @@ place after each batch.
 transient for 60 seconds and cleared by the indexer after every write.
 
 ### `AIMS\Providers\Provider_Interface`
-   116	
-   117	```php
-   118	interface Provider_Interface {
-   119	    /** @return Description_Result|\WP_Error */
-   120	    public function describe( string $file_path, string $mime_type, string $language );
-   121	    /** @return true|\WP_Error */
-   122	    public function test_connection();
-   123	    public static function get_id(): string;
-   124	    public static function get_label(): string;
-   125	    /** @return array<string, string> model id => human hint */
-   126	    public static function get_known_models(): array;
-   127	}
-   128	```
-   129	
-   130	`Description_Result` is a small value object with `description` (string),
-   131	`tags` (string[]), and `alt` (string).
-   132	
-   133	### `AIMS\Providers\Claude_Provider`, `OpenAI_Provider`, `Gemini_Provider`
+
+```php
+interface Provider_Interface {
+    /** @return Description_Result|\WP_Error */
+    public function describe( string $file_path, string $mime_type, string $language );
+    /** @return true|\WP_Error */
+    public function test_connection();
+    public static function get_id(): string;
+    public static function get_label(): string;
+    /** @return array<string, string> model id => human hint */
+    public static function get_known_models(): array;
+}
+```
+
+`Description_Result` is a small value object with `description` (string),
+`tags` (string[]), and `alt` (string).
+
+### `AIMS\Providers\Claude_Provider`, `OpenAI_Provider`, `Gemini_Provider`
 
 Each builds one request with `wp_remote_post`, timeout 60 seconds, sending the file
 as base64 inline image data and the shared prompt, and asks for JSON through the
@@ -264,168 +264,177 @@ for all three (Gemini accepts the same subset we use: object, string, array of
 string, required, additionalProperties).
 
 ### `AIMS\Prompt`
-   155	
-   156	Builds the instruction text and the JSON schema. The instruction asks for:
-   157	
-   158	- `description`: two to four sentences covering subjects, people, actions,
-   159	  setting, colors, visible text, and style. Written in the configured language.
-   160	- `tags`: ten to twenty lowercase tags, single words or short phrases, including
-   161	  plain synonyms so that "woman", "female", and "lady" all match.
-   162	- `alt`: one sentence under 125 characters suitable as HTML alt text.
-   163	
-   164	When the custom prompt setting is non-empty, it is appended under the heading
+
+Builds the instruction text and the JSON schema. The instruction asks for:
+
+- `description`: two to four sentences covering subjects, people, actions,
+  setting, colors, visible text, and style. Written in the configured language.
+- `tags`: ten to twenty lowercase tags, single words or short phrases, including
+  plain synonyms so that "woman", "female", and "lady" all match.
+- `alt`: one sentence under 125 characters suitable as HTML alt text.
+
+When the custom prompt setting is non-empty, it is appended under the heading
 "Additional guidance from the site owner:".
 
 `Prompt::parse( string $json )` strips code fences, decodes, validates that all
-   165	three fields are present and of the right type, trims, and returns a
-   166	`Description_Result` or `WP_Error( 'bad_response' )`.
-   167	
-   168	### `AIMS\Image_Preparer`
-   169	
-   170	Given an attachment ID, returns `[ path, mime ]` or `WP_Error`.
-   171	
-   172	- Images: reads `wp_get_attachment_metadata()['sizes']`, picks the smallest
-   173	  registered size whose longest edge is at least 1000 px. If none qualifies, uses
-   174	  the original only if its longest edge is at most 1600 px; otherwise generates a
-   175	  temporary 1600 px copy with `wp_get_image_editor()`, used for the request and
-   176	  deleted afterwards. This keeps requests small and within provider image limits.
-   177	- PDFs: uses the preview image WP generated on upload (present in metadata under
-   178	  `sizes` when Imagick is available). If absent, returns
-   179	  `WP_Error( 'no_preview' )`, and the indexer marks the attachment `skipped`.
-   180	- Anything else: `WP_Error( 'unsupported' )` → `skipped`.
-   181	
-   182	### `AIMS\Indexer`
-   183	
-   184	`index_attachment( int $id ): true|WP_Error`
-   185	
-   186	1. Acquire a transient lock `aims_lock_{id}` for 120 seconds; bail if held.
-   187	2. Set `_aims_status = pending`.
-   188	3. `Image_Preparer` → on `no_preview` or `unsupported`, set `skipped` and return.
-   189	4. Resolve the configured provider, call `describe()`.
-   190	5. On success write meta:
-   191	   - `_aims_description`, `_aims_tags` (array), `_aims_alt`
-   192	   - `_aims_search_text`: description, tags joined by spaces, and alt,
-   193	     concatenated into one lowercase string. This single row is what search joins
-   194	     on, so the join is one-to-one and needs no `DISTINCT`.
-   195	   - `_aims_status = indexed`, `_aims_indexed_at` (timestamp),
-   196	     `_aims_provider` (for example `claude:claude-opus-5`)
-   197	   - delete `_aims_error`
-   198	   - If the alt setting is on and `_wp_attachment_image_alt` is empty, write
-   199	     `_aims_alt` into it.
-   200	6. On error write `_aims_status = failed` and `_aims_error`, return the error.
-   201	7. Release the lock.
-   202	
-   203	`rebuild_search_text( int $id )` recomputes `_aims_search_text` from the stored
-   204	fields. Called after a user edits the description.
-   205	
-   206	### `AIMS\Queue`
-   207	
-   208	- On `add_attachment`, if auto-index is enabled and the mime type is eligible,
-   209	  `wp_schedule_single_event( time() + 10, 'aims_index_attachment', [ $id ] )`.
-   210	- Cron handler calls `Indexer::index_attachment()`. If the result is a `WP_Error`
-   211	  with code `rate_limited` or `server_error` and no retry has happened yet
-   212	  (`_aims_retry_count < 1`), schedule one more event 5 minutes later.
-   213	
-   214	### `AIMS\Search`
-   215	
-   216	Hooks `posts_join` and `posts_search`, both guarded by: query post type is
-   217	`attachment` (string or single-element array), search string non-empty, and the
-   218	filter has not already been applied to this query. The media grid and the media
-   219	modal both go through `wp_ajax_query_attachments`, which builds a `WP_Query`, so one
-   220	implementation covers list view, grid view, and the editor.
-   221	
-   222	- `posts_join` appends
-   223	  `LEFT JOIN {$wpdb->postmeta} aims_st ON ({$wpdb->posts}.ID = aims_st.post_id AND aims_st.meta_key = '_aims_search_text')`.
-   224	- `posts_search` finds each `({$wpdb->posts}.post_title LIKE '...')` clause WP
-   225	  generated and replaces it with
-   226	  `({$wpdb->posts}.post_title LIKE '...' OR aims_st.meta_value LIKE '...')`,
-   227	  using the same escaped term. WP's own AND-across-terms structure is kept, so a
-   228	  two-word query still requires both words.
-   229	
-   230	Terms are lowercased before matching, and `_aims_search_text` is stored lowercase,
-   231	so results do not depend on collation.
-   232	
-   233	### `AIMS\Attachment_Fields`
-   234	
-   235	- `attachment_fields_to_edit`: adds "AI description" (textarea), "AI tags"
-   236	  (read-only text), "AI index" (status line with timestamp or error), and a
-   237	  Regenerate button carrying the attachment ID. Appears in the media modal sidebar
-   238	  and on the attachment edit page.
-   239	- `attachment_fields_to_save`: stores the edited description and calls
-   240	  `Indexer::rebuild_search_text()`.
-   241	- `manage_media_columns` / `manage_media_custom_column`: an "AI index" column
-   242	  showing status.
-   243	- `bulk_actions-upload` / `handle_bulk_actions-upload`: an "Index with AI" action
-   244	  that schedules a cron event per selected attachment and shows an admin notice
-   245	  with the count.
-   246	
-   247	### `AIMS\REST`
-   248	
-   249	All routes require a logged-in user and a valid REST nonce.
-   250	
-   251	| Route | Method | Capability | Behaviour |
-   252	|---|---|---|---|
-   253	| `/aims/v1/index/{id}` | POST | `upload_files` and `edit_post` on the ID | Runs the indexer synchronously and returns the stored fields. |
-   254	| `/aims/v1/bulk` | POST | `manage_options` | Body: optional `ids` (int[]), `batch_size`, `retry_failed`. With `ids`, indexes up to `batch_size` of them and returns the rest as `remaining_ids`. Without, selects the next N attachment IDs whose status is missing (or `failed` when `retry_failed`), indexes each, returns per-ID results and the remaining count. |
-   255	| `/aims/v1/bulk/stats` | GET | `manage_options` | Returns the counts shown on the settings panel. |
-   256	| `/aims/v1/test` | POST | `manage_options` | Calls `test_connection()` on the saved provider. |
-   257	
-   258	### Assets — `assets/admin.js`, `assets/admin.css`
-   259	
-   260	- On attachment details views: delegate clicks on the Regenerate button, call the
-   261	  index route, update the sidebar fields in place, show inline errors.
-   262	- On the settings page: the bulk loop. Start fetches stats, then calls the bulk
-   263	  route in a loop until remaining is zero or Stop is pressed. Progress bar and log
-   264	  update after each batch.
-   265	
-   266	Plain ES2017, no build step, enqueued only on the relevant admin screens.
-   267	
-   268	## Error handling summary
-   269	
-   270	| Situation | Result |
-   271	|---|---|
-   272	| Unsupported mime or PDF without preview | status `skipped`, no API call |
-   273	| Missing API key | `WP_Error( 'auth_error' )`, status `failed`, settings page shows a notice |
-   274	| 401 / 403 from provider | `auth_error`, `failed`, no retry |
-   275	| 429 | `rate_limited`, `failed`, one cron retry after 5 minutes |
-   276	| 5xx or HTTP transport error | `server_error`, `failed`, one cron retry |
-   277	| Refusal or malformed JSON | `refused` / `bad_response`, `failed`, no retry |
-   278	| Attachment deleted | meta goes with it; a scheduled event for a missing ID exits silently |
-   279	
-   280	## Cost guidance shown in settings
-   281	
-   282	Estimates assume a 1500-token image and 300 output tokens. Shown next to each model
-   283	in the dropdown, rounded.
-   284	
-   285	| Model | Per image | 10,000 images |
-   286	|---|---|---|
-   287	| claude-opus-5 | $0.015 | $150 |
-   288	| claude-sonnet-5 | $0.006 | $60 |
-   289	| claude-haiku-4-5 | $0.003 | $30 |
-   290	
-   291	OpenAI and Gemini hints are filled in during implementation from current pricing
-   292	pages.
-   293	
-   294	## Security and wordpress.org compliance
-   295	
-   296	- All output escaped, all input sanitized, capabilities checked on every route and
-   297	  form handler, nonces on every form and REST call.
-   298	- Direct file access blocked with `ABSPATH` checks.
-   299	- No external calls without the disclosure notice in settings and `readme.txt`.
-   300	- All strings translatable under the `ai-media-search` text domain.
-   301	- GPL-2.0-or-later license header.
-   302	
-   303	## Testing
-   304	
-   305	- **Unit tests** with PHPUnit and Brain Monkey (no WordPress install needed):
-   306	  - `Prompt::parse()` against good, fenced, partial, and malformed JSON fixtures.
-   307	  - Each provider's request body builder and response parser against recorded
-   308	    fixture responses, including 429, 401, refusal, and malformed cases.
-   309	  - `Search` SQL rewriting: single term, multi-term, non-attachment queries left
-   310	    untouched, already-filtered queries not double-joined.
-   311	  - `Image_Preparer` size selection given synthetic metadata arrays.
-   312	- **Static checks**: PHPCS with the WordPress Coding Standards ruleset, and the
-   313	  official Plugin Check plugin before release.
-   314	- **Manual integration** through wp-env when Docker is available: upload an
-   315	  image, confirm the cron event fires, search for a word from the description,
-   316	  regenerate from the modal, run the bulk indexer on a small library.
+three fields are present and of the right type, trims, and returns a
+`Description_Result` or `WP_Error( 'bad_response' )`.
+
+### `AIMS\Image_Preparer`
+
+Given an attachment ID, returns `[ path, mime ]` or `WP_Error`.
+
+- Images: reads `wp_get_attachment_metadata()['sizes']`, picks the smallest
+  registered size whose longest edge is at least 1000 px. If none qualifies, uses
+  the original only if its longest edge is at most 1600 px; otherwise generates a
+  temporary 1600 px copy with `wp_get_image_editor()`, used for the request and
+  deleted afterwards. This keeps requests small and within provider image limits.
+- PDFs: uses the preview image WP generated on upload (present in metadata under
+  `sizes` when Imagick is available). If absent, returns
+  `WP_Error( 'no_preview' )`, and the indexer marks the attachment `skipped`.
+- Anything else: `WP_Error( 'unsupported' )` → `skipped`.
+
+### `AIMS\Indexer`
+
+`index_attachment( int $id ): true|WP_Error`
+
+1. Acquire a transient lock `aims_lock_{id}` for 120 seconds; bail if held.
+2. Set `_aims_status = pending`.
+3. `Image_Preparer` → on `no_preview` or `unsupported`, set `skipped` and return.
+4. Resolve the configured provider, call `describe()`.
+5. On success write meta:
+   - `_aims_description`, `_aims_tags` (array), `_aims_alt`
+   - `_aims_search_text`: description, tags joined by spaces, and alt,
+     concatenated into one lowercase string. This single row is what search joins
+     on, so the join is one-to-one and needs no `DISTINCT`.
+   - `_aims_status = indexed`, `_aims_indexed_at` (timestamp),
+     `_aims_provider` (for example `claude:claude-opus-5`)
+   - delete `_aims_error`
+   - If the alt setting is on and `_wp_attachment_image_alt` is empty, write
+     `_aims_alt` into it.
+6. On error write `_aims_status = failed` and `_aims_error`, return the error.
+7. Release the lock.
+
+`rebuild_search_text( int $id )` recomputes `_aims_search_text` from the stored
+fields. Called after a user edits the description.
+
+### `AIMS\Queue`
+
+- On `add_attachment`, if auto-index is enabled and the mime type is eligible,
+  `wp_schedule_single_event( time() + 10, 'aims_index_attachment', [ $id ] )`.
+- Cron handler calls `Indexer::index_attachment()`. If the result is a `WP_Error`
+  with code `rate_limited` or `server_error` and no retry has happened yet
+  (`_aims_retry_count < 1`), schedule one more event 5 minutes later.
+
+### `AIMS\Search`
+
+Hooks `posts_join` and `posts_search`, both guarded by: query post type is
+`attachment` (string or single-element array), search string non-empty, and the
+filter has not already been applied to this query. The media grid and the media
+modal both go through `wp_ajax_query_attachments`, which builds a `WP_Query`, so one
+implementation covers list view, grid view, and the editor.
+
+- `posts_join` appends
+  `LEFT JOIN {$wpdb->postmeta} aims_st ON ({$wpdb->posts}.ID = aims_st.post_id AND aims_st.meta_key = '_aims_search_text')`.
+- `posts_search` finds each `({$wpdb->posts}.post_title LIKE '...')` clause WP
+  generated and replaces it with
+  `({$wpdb->posts}.post_title LIKE '...' OR aims_st.meta_value LIKE '...')`,
+  using the same escaped term. WP's own AND-across-terms structure is kept, so a
+  two-word query still requires both words.
+
+Terms are lowercased before matching, and `_aims_search_text` is stored lowercase,
+so results do not depend on collation.
+
+### `AIMS\Attachment_Fields`
+
+- `attachment_fields_to_edit`: adds "AI description" (textarea), "AI tags"
+  (read-only text), "AI index" (status line with timestamp or error), and a
+  Regenerate button carrying the attachment ID. Appears in the media modal sidebar
+  and on the attachment edit page.
+- `attachment_fields_to_save`: stores the edited description and calls
+  `Indexer::rebuild_search_text()`.
+- `manage_media_columns` / `manage_media_custom_column`: an "AI index" column
+  showing status.
+- `bulk_actions-upload` / `handle_bulk_actions-upload`: an "Index with AI" action
+  that schedules a cron event per selected attachment and shows an admin notice
+  with the count.
+
+### `AIMS\REST`
+
+All routes require a logged-in user and a valid REST nonce.
+
+| Route | Method | Capability | Behaviour |
+|---|---|---|---|
+| `/aims/v1/index/{id}` | POST | `upload_files` and `edit_post` on the ID | Runs the indexer synchronously and returns the stored fields. |
+| `/aims/v1/bulk` | POST | `manage_options` | Body: optional `ids` (int[]), `batch_size`, `retry_failed`. With `ids`, indexes up to `batch_size` of them and returns the rest as `remaining_ids`. Without, selects the next N attachment IDs whose status is missing (or `failed` when `retry_failed`), indexes each, returns per-ID results and the remaining count. |
+| `/aims/v1/bulk/stats` | GET | `manage_options` | Returns the counts shown on the settings panel. |
+| `/aims/v1/test` | POST | `manage_options` | Calls `test_connection()` on the saved provider. |
+
+### Assets — `assets/admin.js`, `assets/admin.css`
+
+- On attachment details views: delegate clicks on the Regenerate button, call the
+  index route, update the sidebar fields in place, show inline errors.
+- On the plugin page: tab switching, select-all, and the bulk loop. "Index
+  selected" sends the checked IDs; "Index all not indexed" sends none and lets the
+  server pick. Either way the loop calls the bulk route until remaining is zero or
+  Stop is pressed, updating the progress bar, the log, and the affected table rows
+  after each batch.
+
+Plain ES2017, no build step, enqueued only on the relevant admin screens.
+
+## Error handling summary
+
+| Situation | Result |
+|---|---|
+| Unsupported mime or PDF without preview | status `skipped`, no API call |
+| Missing API key | `WP_Error( 'auth_error' )`, status `failed`, settings page shows a notice |
+| 401 / 403 from provider | `auth_error`, `failed`, no retry |
+| 429 | `rate_limited`, `failed`, one cron retry after 5 minutes |
+| 5xx or HTTP transport error | `server_error`, `failed`, one cron retry |
+| Refusal or malformed JSON | `refused` / `bad_response`, `failed`, no retry |
+| Attachment deleted | meta goes with it; a scheduled event for a missing ID exits silently |
+
+## Cost guidance shown in settings
+
+Estimates assume a 1500-token image and 300 output tokens. Shown next to each model
+in the dropdown, rounded.
+
+| Model | Per image | 10,000 images |
+|---|---|---|
+| claude-opus-5 | $0.015 | $150 |
+| claude-sonnet-5 | $0.006 | $60 |
+| claude-haiku-4-5 | $0.003 | $30 |
+
+| gpt-6-astra | $0.030 | $300 |
+| gpt-5.6-sol | $0.012 | $120 |
+| gpt-5.6-terra | $0.0066 | $66 |
+| gpt-5.6-luna | $0.0007 | $7 |
+| gemini-3.8-flash | $0.0022 | $22 |
+| gemini-2.5-flash | $0.0012 | $12 |
+| gemini-2.5-flash-lite | $0.0003 | $3 |
+
+Prices verified 2026-09-10 against each provider's pricing page.
+
+## Security and wordpress.org compliance
+
+- All output escaped, all input sanitized, capabilities checked on every route and
+  form handler, nonces on every form and REST call.
+- Direct file access blocked with `ABSPATH` checks.
+- No external calls without the disclosure notice in settings and `readme.txt`.
+- All strings translatable under the `ai-media-search` text domain.
+- GPL-2.0-or-later license header.
+
+## Testing
+
+- **Unit tests** with PHPUnit and Brain Monkey (no WordPress install needed):
+  - `Prompt::parse()` against good, fenced, partial, and malformed JSON fixtures.
+  - Each provider's request body builder and response parser against recorded
+    fixture responses, including 429, 401, refusal, and malformed cases.
+  - `Search` SQL rewriting: single term, multi-term, non-attachment queries left
+    untouched, already-filtered queries not double-joined.
+  - `Image_Preparer` size selection given synthetic metadata arrays.
+- **Static checks**: PHPCS with the WordPress Coding Standards ruleset, and the
+  official Plugin Check plugin before release.
+- **Manual integration** through wp-env when Docker is available: upload an
+  image, confirm the cron event fires, search for a word from the description,
+  regenerate from the modal, run the bulk indexer on a small library.
