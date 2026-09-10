@@ -11,7 +11,11 @@ use AIMS\Providers\Registry;
 
 defined( 'ABSPATH' ) || exit;
 
-// Not final: the queue tests replace it with a PHPUnit mock.
+/**
+ * Runs prepare -> provider -> meta for one attachment.
+ *
+ * Not final: the queue tests replace it with a PHPUnit mock.
+ */
 class Indexer {
 	const STATUS_PENDING = 'pending';
 	const STATUS_INDEXED = 'indexed';

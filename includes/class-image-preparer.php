@@ -9,7 +9,11 @@ namespace AIMS;
 
 defined( 'ABSPATH' ) || exit;
 
-// Not final: the indexer tests replace it with a PHPUnit mock.
+/**
+ * Picks (or produces) a reasonably sized image file to send to a provider.
+ *
+ * Not final: the indexer tests replace it with a PHPUnit mock.
+ */
 class Image_Preparer {
 	const IMAGE_MIMES = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
 	const PDF_MIME    = 'application/pdf';

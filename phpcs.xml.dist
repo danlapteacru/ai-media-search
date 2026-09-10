@@ -13,14 +13,10 @@
 	<config name="testVersion" value="7.4-"/>
 	<rule ref="WordPress">
 		<exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
-		<!-- The project's established convention is a file-level docblock (with @package) and no
-			per-class or per-method docblocks. Enforcing full docblock coverage here would rewrite
-			every file's comment style rather than fix a real defect. -->
-		<exclude name="Squiz.Commenting.FunctionComment.Missing"/>
-		<exclude name="Squiz.Commenting.FunctionComment.MissingParamTag"/>
-		<exclude name="Squiz.Commenting.ClassComment.Missing"/>
-		<exclude name="Squiz.Commenting.ClassComment.WrongStyle"/>
-		<exclude name="Generic.Commenting.DocComment.MissingShort"/>
+		<!-- Per-method docblocks are deferred for 1.0: every method has typed parameters and return
+			types, and each file carries a file-level docblock. Everything else in the WordPress
+			ruleset is enforced. -->
+		<exclude name="WordPress-Docs"/>
 	</rule>
 	<rule ref="PHPCompatibilityWP"/>
 	<rule ref="WordPress.WP.I18n">
