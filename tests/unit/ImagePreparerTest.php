@@ -174,6 +174,21 @@ class ImagePreparerTest extends TestCase {
 		$this->assertSame( 'Could not save the resized copy.', $result->get_error_message() );
 	}
 
+	public function test_prepare_resize_failure_when_saved_path_missing() {
+		Functions\when( 'get_post_mime_type' )->justReturn( 'image/png' );
+		Functions\when( 'get_attached_file' )->justReturn( '/uploads/big.png' );
+		Functions\when( 'wp_get_attachment_metadata' )->justReturn( array( 'width' => 6000, 'height' => 4000, 'sizes' => array() ) );
+
+		$editor = new class() {
+			public function resize( $w, $h, $crop ) { return true; }
+			public function save( $dest ) { return array( 'mime-type' => 'image/png' ); }
+		};
+		Functions\when( 'wp_get_image_editor' )->justReturn( $editor );
+
+		$result = ( new Image_Preparer() )->prepare( 9 );
+		$this->assertSame( 'resize_failed', $result->get_error_code() );
+	}
+
 	public function test_cleanup_removes_only_temporary_files() {
 		$tmp = tempnam( sys_get_temp_dir(), 'aims' );
 		( new Image_Preparer() )->cleanup( array( 'path' => $tmp, 'mime' => 'image/png', 'temporary' => true ) );
