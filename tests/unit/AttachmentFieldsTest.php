@@ -63,10 +63,32 @@ class AttachmentFieldsTest extends TestCase {
 
 	public function test_handle_bulk_schedules_each_id() {
 		Functions\when( 'wp_next_scheduled' )->justReturn( false );
+		Functions\when( 'current_user_can' )->justReturn( true );
+		Functions\when( 'get_post_mime_type' )->justReturn( 'image/jpeg' );
 		Functions\expect( 'wp_schedule_single_event' )->twice()->andReturn( true );
 		Functions\when( 'add_query_arg' )->alias( function ( $k, $v, $url ) { return $url . '?' . $k . '=' . $v; } );
 		$redirect = ( new Attachment_Fields() )->handle_bulk( 'upload.php', 'aims_index', array( 1, 2 ) );
 		$this->assertSame( 'upload.php?aims_queued=2', $redirect );
 		$this->assertSame( 'upload.php', ( new Attachment_Fields() )->handle_bulk( 'upload.php', 'other', array( 1 ) ) );
+	}
+
+	public function test_handle_bulk_skips_ids_the_user_cannot_edit() {
+		Functions\when( 'wp_next_scheduled' )->justReturn( false );
+		Functions\when( 'get_post_mime_type' )->justReturn( 'image/jpeg' );
+		Functions\when( 'current_user_can' )->alias( function ( $cap, $id ) { return 2 !== $id; } );
+		Functions\expect( 'wp_schedule_single_event' )->once()->andReturn( true );
+		Functions\when( 'add_query_arg' )->alias( function ( $k, $v, $url ) { return $url . '?' . $k . '=' . $v; } );
+		$redirect = ( new Attachment_Fields() )->handle_bulk( 'upload.php', 'aims_index', array( 1, 2 ) );
+		$this->assertSame( 'upload.php?aims_queued=1', $redirect );
+	}
+
+	public function test_handle_bulk_skips_ineligible_mimes() {
+		Functions\when( 'wp_next_scheduled' )->justReturn( false );
+		Functions\when( 'current_user_can' )->justReturn( true );
+		Functions\when( 'get_post_mime_type' )->alias( function ( $id ) { return 2 === $id ? 'video/mp4' : 'image/jpeg'; } );
+		Functions\expect( 'wp_schedule_single_event' )->once()->andReturn( true );
+		Functions\when( 'add_query_arg' )->alias( function ( $k, $v, $url ) { return $url . '?' . $k . '=' . $v; } );
+		$redirect = ( new Attachment_Fields() )->handle_bulk( 'upload.php', 'aims_index', array( 1, 2 ) );
+		$this->assertSame( 'upload.php?aims_queued=1', $redirect );
 	}
 }

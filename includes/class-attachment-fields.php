@@ -118,7 +118,14 @@ final class Attachment_Fields {
 		}
 		$count = 0;
 		foreach ( (array) $ids as $id ) {
-			if ( Queue::schedule( (int) $id, 5 ) ) {
+			$id = (int) $id;
+			if ( ! current_user_can( 'edit_post', $id ) ) {
+				continue;
+			}
+			if ( ! Image_Preparer::is_eligible_mime( (string) get_post_mime_type( $id ) ) ) {
+				continue;
+			}
+			if ( Queue::schedule( $id, 5 ) ) {
 				++$count;
 			}
 		}
