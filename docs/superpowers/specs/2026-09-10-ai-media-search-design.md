@@ -29,7 +29,9 @@
     29	| Alt text | Optional, off by default: fill an empty alt field with the model's alt sentence. |
     30	| Visibility | Editable "AI description" field on the attachment details sidebar and edit page, with Regenerate. |
     31	| File types | Images (jpeg, png, gif, webp) and PDFs via the first-page preview WP generates. |
-    32	| Storage | Post meta plus `posts_join` / `posts_search` filters. No custom tables. |
+    32	| Admin UI | Own top-level menu page "AI Media Search" with two tabs, Dashboard and Settings, modeled on the "AI Alt-Text Generator" plugin's layout (stat cards as filters, paginated asset table, select rows, run with progress bar). |
+| Custom prompt | Optional textarea in settings. Its text is appended to the built-in prompt as extra guidance. |
+| Storage | Post meta plus `posts_join` / `posts_search` filters. No custom tables. |
     33	| Background work | WP-Cron single events for uploads; REST-driven batches for bulk. No Action Scheduler. |
     34	| HTTP | WordPress HTTP API (`wp_remote_post`) for all providers. No vendored SDKs. |
     35	
@@ -58,7 +60,7 @@
     58	                                   │
     59	                                   ▼
     60	   Regenerate button ──► REST ──► Indexer ──► Image_Preparer ──► file path + mime
-    61	   Bulk indexer      ──► REST ──►    │
+    61	   Dashboard buttons ──► REST ──►    │
     62	                                     ├──► Provider::describe() ──► Description_Result
     63	                                     │
     64	                                     └──► post meta (_aims_*), optional alt text
@@ -84,35 +86,85 @@
     84	
     85	Wires every other component's hooks. No logic of its own.
     86	
-    87	### `AIMS\Settings` — page under Media → AI Search
-    88	
-    89	Uses the Settings API. Fields:
-    90	
-    91	- Provider: radio, one of `claude`, `openai`, `gemini`.
-    92	- API key: one password field per provider. All three are stored so switching
-    93	  provider does not lose keys.
-    94	- Model: one select per provider. Each select lists known model IDs with a short
-    95	  cost hint (for example "claude-opus-5 — highest quality, about $0.015 per image")
-    96	  and a final "Custom…" entry that reveals a text input for any model ID. Initial
-    97	  selection is the first entry in each list. The model lists live in one PHP array
-    98	  so they are easy to update.
-    99	- Description language: text field, default "English".
-   100	- Auto-index new uploads: checkbox, default on.
-   101	- Fill empty alt text: checkbox, default off.
-   102	- Test connection: button that calls the test-connection REST route with the
-   103	  currently saved provider and shows success or the error message.
-   104	
-   105	Below the fields, a "Index existing library" panel shows counts (total eligible,
-   106	indexed, failed, skipped, pending), a batch size number input (default 3, max 10),
-   107	a "Retry failed" checkbox, Start and Stop buttons, a progress bar, and a scrolling
-   108	log of per-file results. The panel is driven by `admin.js` calling the bulk REST
-   109	route repeatedly until it reports zero remaining.
-   110	
-   111	The page also carries a plain notice: "Images and PDF previews are sent to the
-   112	selected third-party API for analysis." The same notice appears in `readme.txt`
-   113	under an "External services" heading, which the wordpress.org review requires.
-   114	
-   115	### `AIMS\Providers\Provider_Interface`
+    87	### `AIMS\Settings` — option registration
+
+Registers the single `aims_settings` option with the Settings API and sanitizes it.
+Keys and defaults:
+
+| Key | Type | Default |
+|---|---|---|
+| `provider` | `claude` \| `openai` \| `gemini` | `claude` |
+| `api_keys` | array keyed by provider id | all empty |
+| `models` | array keyed by provider id, model ID string | first entry of each provider's known list |
+| `custom_models` | array keyed by provider id, free text used when `models[x] === 'custom'` | all empty |
+| `language` | string | `English` |
+| `custom_prompt` | string, textarea | empty |
+| `auto_index` | bool | `true` |
+| `fill_alt` | bool | `false` |
+| `batch_size` | int 1–10 | `3` |
+
+`Settings::get( string $key )` returns one value with the default applied.
+`Settings::get_active_model()` resolves the model ID for the active provider,
+honouring the custom entry.
+
+### `AIMS\Admin_Page` — top-level menu page with two tabs
+
+`add_menu_page()` with slug `ai-media-search`, capability `manage_options`, icon
+`dashicons-search`. The page renders a header, a tab bar (Dashboard, Settings), and
+one tab body. Tab switching is client-side; the active tab is remembered in the URL
+hash. Markup uses core admin classes (`wrap`, `widefat`, `button`, `notice`) and a
+small stylesheet, no utility framework.
+
+**Settings tab** is a standard `options.php` form with these fields:
+
+- Provider: radio, one of `claude`, `openai`, `gemini`.
+- API key: one password field per provider. All three are stored so switching
+  provider does not lose keys.
+- Model: one select per provider listing known model IDs with a short cost hint
+  (for example "claude-opus-5 — about $0.015 per image") and a final "Custom…"
+  entry that reveals a text input for any model ID. Initial selection is the first
+  entry in each list. The lists live in each provider class.
+- Description language: text field, default "English".
+- Custom prompt: textarea. Appended to the built-in prompt as "Additional guidance
+  from the site owner". Empty by default.
+- Auto-index new uploads: checkbox, default on.
+- Fill empty alt text: checkbox, default off.
+- Batch size: number 1–10, default 3.
+- Test connection: button that calls the test REST route with the saved provider
+  and shows success or the error message inline.
+
+A plain notice on this tab reads: "Images and PDF previews are sent to the selected
+third-party API for analysis." The same text appears in `readme.txt` under
+"External services", which the wordpress.org review requires.
+
+**Dashboard tab** shows:
+
+- Five stat cards that double as filter links: All, Indexed, Not indexed, Failed,
+  Skipped. Counts come from `Stats::counts()`.
+- A paginated table (50 rows per page, `paged` and `filter` query args) of eligible
+  attachments (images and PDFs, `post_status = inherit`). Columns: checkbox,
+  thumbnail (60 px), title and filename, AI description (first 160 characters), tags,
+  status with timestamp or error text, actions ("Index" or "Regenerate" button, and
+  an "Edit" link to the attachment page). A select-all checkbox in the header.
+- Below the table: "Index selected" button, "Index all not indexed" button, a
+  "Retry failed" checkbox, a progress bar, a running count, a Stop button, and a
+  scrolling log of per-file results.
+- If no API key is saved for the active provider, both buttons are disabled and a
+  notice links to the Settings tab.
+
+Both buttons drive the same loop in `admin.js`: call the bulk REST route with either
+an explicit list of IDs (selected rows) or no list (server picks the next unindexed
+rows) until the response reports zero remaining or Stop is pressed. Rows update in
+place after each batch.
+
+### `AIMS\Stats`
+
+`Stats::counts(): array` returns `total`, `indexed`, `not_indexed`, `failed`,
+`skipped` using one `SELECT meta_value, COUNT(*)` grouped query on
+`_aims_status` joined to eligible attachments, plus the total. Cached in a
+transient for 60 seconds and cleared by the indexer after every write.
+
+### `AIMS\Providers\Provider_Interface`
    116	
    117	```php
    118	interface Provider_Interface {
@@ -131,27 +183,87 @@
    131	`tags` (string[]), and `alt` (string).
    132	
    133	### `AIMS\Providers\Claude_Provider`, `OpenAI_Provider`, `Gemini_Provider`
-   134	
-   135	Each builds one request with `wp_remote_post`, timeout 60 seconds, sending the file
-   136	as base64 inline image data and the shared prompt. Each uses its provider's native
-   137	JSON-schema output mode so the reply is structured:
-   138	
-   139	- Claude: Messages API `POST /v1/messages` with `output_config.format` JSON schema.
-   140	- OpenAI: `response_format` with `json_schema`.
-   141	- Gemini: `generationConfig.responseMimeType = application/json` with `responseSchema`.
-   142	
-   143	Exact request shapes and current model IDs for OpenAI and Gemini are verified
-   144	against live documentation during implementation, not recalled from memory.
-   145	
-   146	Response handling: HTTP errors, non-200 status, missing or malformed JSON, and a
-   147	provider "refusal" stop reason all return a `WP_Error` whose code distinguishes
-   148	`rate_limited`, `server_error`, `auth_error`, `refused`, and `bad_response`. The
-   149	indexer uses the code to decide whether to retry.
-   150	
-   151	Shared prompt logic lives in `AIMS\Prompt`, so all three providers send the same
-   152	instructions and parse the same three fields.
-   153	
-   154	### `AIMS\Prompt`
+
+Each builds one request with `wp_remote_post`, timeout 60 seconds, sending the file
+as base64 inline image data and the shared prompt, and asks for JSON through the
+provider's native schema mode. Request shapes below were verified against each
+provider's live documentation on 2026-09-10.
+
+**Claude** — `POST https://api.anthropic.com/v1/messages`, headers `x-api-key`,
+`anthropic-version: 2023-06-01`, `content-type: application/json`. Body:
+
+```json
+{
+  "model": "claude-opus-5",
+  "max_tokens": 1024,
+  "system": "<instruction text>",
+  "messages": [{"role": "user", "content": [
+    {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": "<b64>"}},
+    {"type": "text", "text": "Describe this image."}
+  ]}],
+  "output_config": {"format": {"type": "json_schema", "schema": { ...schema... }}}
+}
+```
+
+Response JSON is in `content[0].text`. `stop_reason: "refusal"` means refused.
+Schema objects need `additionalProperties: false` and a full `required` list.
+Images may be up to 10 MB base64; Claude 4.7 and later view up to a 2576 px long
+edge, so we downscale to about 1600 px to keep cost predictable.
+Known models with hints: `claude-opus-5` ($5 / $25 per MTok), `claude-sonnet-5`
+($2 / $10), `claude-haiku-4-5` ($1 / $5).
+
+**OpenAI** — `POST https://api.openai.com/v1/responses`, header
+`Authorization: Bearer <key>`. Body:
+
+```json
+{
+  "model": "gpt-5.6-terra",
+  "instructions": "<instruction text>",
+  "input": [{"role": "user", "content": [
+    {"type": "input_text", "text": "Describe this image."},
+    {"type": "input_image", "image_url": "data:image/jpeg;base64,<b64>", "detail": "auto"}
+  ]}],
+  "text": {"format": {"type": "json_schema", "name": "media_description", "schema": { ...schema... }, "strict": true}}
+}
+```
+
+Response JSON is the first `output[]` item of type `message`, its
+`content[]` item of type `output_text`, field `text`. A `content[]` item of type
+`refusal` means refused. Known models: `gpt-6-astra` ($10 / $50), `gpt-5.6-sol`
+($4 / $20), `gpt-5.6-terra` ($2 / $12), `gpt-5.6-luna` ($0.20 / $1.20).
+
+**Gemini** — `POST https://generativelanguage.googleapis.com/v1beta/models/<model>:generateContent`,
+header `x-goog-api-key`. Body:
+
+```json
+{
+  "systemInstruction": {"parts": [{"text": "<instruction text>"}]},
+  "contents": [{"parts": [
+    {"inline_data": {"mime_type": "image/jpeg", "data": "<b64>"}},
+    {"text": "Describe this image."}
+  ]}],
+  "generationConfig": {"responseMimeType": "application/json", "responseSchema": { ...schema... }}
+}
+```
+
+Response JSON is in `candidates[0].content.parts[0].text`. `finishReason`
+`SAFETY` means refused; a missing `candidates` array with a `promptFeedback.blockReason`
+also means refused. Inline requests are capped at 20 MB. Known models:
+`gemini-3.8-flash` ($0.75 / $3.75), `gemini-3.5-flash-lite` ($0.30 / $2.50),
+`gemini-2.5-flash` ($0.30 / $2.50), `gemini-2.5-flash-lite` ($0.10 / $0.40),
+`gemini-2.5-pro` ($1.25 / $10).
+
+Response handling in all three: transport errors, non-200 status, missing or
+malformed JSON, and refusals return a `WP_Error` whose code is one of
+`auth_error` (401, 403), `rate_limited` (429), `server_error` (5xx and transport),
+`refused`, or `bad_response`. The indexer uses the code to decide whether to retry.
+
+Shared prompt logic lives in `AIMS\Prompt`, so all three providers send the same
+instructions and parse the same three fields. The JSON schema is the same object
+for all three (Gemini accepts the same subset we use: object, string, array of
+string, required, additionalProperties).
+
+### `AIMS\Prompt`
    155	
    156	Builds the instruction text and the JSON schema. The instruction asks for:
    157	
@@ -161,7 +273,10 @@
    161	  plain synonyms so that "woman", "female", and "lady" all match.
    162	- `alt`: one sentence under 125 characters suitable as HTML alt text.
    163	
-   164	`Prompt::parse( string $json )` strips code fences, decodes, validates that all
+   164	When the custom prompt setting is non-empty, it is appended under the heading
+"Additional guidance from the site owner:".
+
+`Prompt::parse( string $json )` strips code fences, decodes, validates that all
    165	three fields are present and of the right type, trims, and returns a
    166	`Description_Result` or `WP_Error( 'bad_response' )`.
    167	
@@ -251,7 +366,7 @@
    251	| Route | Method | Capability | Behaviour |
    252	|---|---|---|---|
    253	| `/aims/v1/index/{id}` | POST | `upload_files` and `edit_post` on the ID | Runs the indexer synchronously and returns the stored fields. |
-   254	| `/aims/v1/bulk` | POST | `manage_options` | Body: `batch_size`, `retry_failed`. Selects the next N attachment IDs whose status is missing (or `failed` when `retry_failed`), indexes each, returns per-ID results and the remaining count. |
+   254	| `/aims/v1/bulk` | POST | `manage_options` | Body: optional `ids` (int[]), `batch_size`, `retry_failed`. With `ids`, indexes up to `batch_size` of them and returns the rest as `remaining_ids`. Without, selects the next N attachment IDs whose status is missing (or `failed` when `retry_failed`), indexes each, returns per-ID results and the remaining count. |
    255	| `/aims/v1/bulk/stats` | GET | `manage_options` | Returns the counts shown on the settings panel. |
    256	| `/aims/v1/test` | POST | `manage_options` | Calls `test_connection()` on the saved provider. |
    257	
