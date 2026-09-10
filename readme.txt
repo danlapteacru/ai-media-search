@@ -1,5 +1,5 @@
 === AI Media Search ===
-Contributors: danlapteacru
+Contributors: d1sabled
 Tags: media library, search, ai, alt text, images
 Requires at least: 6.0
 Tested up to: 7.1
