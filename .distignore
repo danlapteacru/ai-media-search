@@ -6,6 +6,7 @@
 /node_modules
 .gitignore
 .distignore
+README.md
 composer.json
 composer.lock
 phpunit.xml.dist
