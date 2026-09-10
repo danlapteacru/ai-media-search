@@ -22,6 +22,6 @@ final class Plugin {
 
 	public function init(): void {
 		load_plugin_textdomain( 'ai-media-search', false, dirname( plugin_basename( AIMS_FILE ) ) . '/languages' );
-		// Components register here in later tasks.
+		( new Settings() )->register();
 	}
 }
