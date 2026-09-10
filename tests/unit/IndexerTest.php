@@ -22,6 +22,7 @@ class IndexerTest extends TestCase {
 		Functions\when( 'set_transient' )->justReturn( true );
 		Functions\when( 'delete_transient' )->justReturn( true );
 		Functions\when( 'get_post_mime_type' )->justReturn( 'image/jpeg' );
+		Functions\when( 'get_post_type' )->justReturn( 'attachment' );
 
 		$meta = &$this->meta;
 		Functions\when( 'update_post_meta' )->alias( function ( $id, $key, $value ) use ( &$meta ) { $meta[ $id ][ $key ] = $value; return true; } );
@@ -115,6 +116,18 @@ class IndexerTest extends TestCase {
 		$this->assertSame( 'rate_limited', $result->get_error_code() );
 		$this->assertSame( 'failed', $this->meta[4]['_aims_status'] );
 		$this->assertSame( 'slow down', $this->meta[4]['_aims_error'] );
+	}
+
+	public function test_non_attachment_id_returns_not_found_without_writing_meta() {
+		Functions\when( 'get_post_type' )->justReturn( 'page' );
+		$provider = $this->provider( null );
+		$indexer  = new Indexer( $this->preparer( array() ), function () use ( $provider ) { return $provider; } );
+
+		$result = $indexer->index_attachment( 99 );
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'not_found', $result->get_error_code() );
+		$this->assertArrayNotHasKey( 99, $this->meta );
+		$this->assertSame( 0, $provider->calls );
 	}
 
 	public function test_lock_prevents_double_processing() {
