@@ -66,6 +66,13 @@ final class Admin_Page {
 					'index'      => __( 'Index', 'ai-media-search' ),
 					'progress'   => /* translators: 1: done count, 2: total count */ __( '%1$s of %2$s', 'ai-media-search' ),
 					'noSelection' => __( 'Select at least one file first.', 'ai-media-search' ),
+					'statusLabels' => array(
+						Indexer::STATUS_INDEXED => Attachment_Fields::status_label( Indexer::STATUS_INDEXED ),
+						Indexer::STATUS_FAILED  => Attachment_Fields::status_label( Indexer::STATUS_FAILED ),
+						Indexer::STATUS_SKIPPED => Attachment_Fields::status_label( Indexer::STATUS_SKIPPED ),
+						Indexer::STATUS_PENDING => Attachment_Fields::status_label( Indexer::STATUS_PENDING ),
+						'none'                  => Attachment_Fields::status_label( '' ),
+					),
 				),
 			)
 		);

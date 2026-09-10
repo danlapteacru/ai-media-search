@@ -28,7 +28,7 @@
 
 	function statusHtml( item ) {
 		var status = item.status || 'none';
-		var labels = { indexed: 'Indexed', failed: 'Failed', skipped: 'Skipped', pending: 'Pending', none: 'Not indexed' };
+		var labels = i18n.statusLabels || {};
 		var html = '<span class="aims-status aims-status-' + escapeHtml( status ) + '">' + escapeHtml( labels[ status ] || status ) + '</span>';
 		if ( item.error && status !== 'indexed' ) {
 			html += ' <span class="aims-error">' + escapeHtml( item.error ) + '</span>';
@@ -154,7 +154,8 @@
 		var ul = document.getElementById( 'aims-log' );
 		var li = document.createElement( 'li' );
 		li.className = item.ok ? 'aims-log-ok' : 'aims-log-fail';
-		li.textContent = '#' + item.id + ' ' + ( item.title || '' ) + ' — ' + ( item.ok ? ( item.status || '' ) : ( item.error || '' ) );
+		var statusLabels = i18n.statusLabels || {};
+		li.textContent = '#' + item.id + ' ' + ( item.title || '' ) + ' — ' + ( item.ok ? ( statusLabels[ item.status ] || item.status || '' ) : ( item.error || '' ) );
 		ul.insertBefore( li, ul.firstChild );
 	}
 
