@@ -25,5 +25,6 @@ final class Plugin {
 		( new Settings() )->register();
 		( new Queue() )->register();
 		( new Search() )->register();
+		( new Rest() )->register();
 	}
 }
