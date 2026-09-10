@@ -11,6 +11,7 @@
 .aims-table .aims-file { min-width: 220px; }
 .aims-table .aims-file img { float: left; margin-right: 8px; width: 60px; height: 60px; object-fit: cover; }
 .aims-table .aims-file .aims-muted { white-space: nowrap; }
+.aims-table .aims-status-cell, .aims-table .aims-actions { white-space: nowrap; }
 .aims-table .aims-description { max-width: 360px; }
 .aims-table .aims-tags { max-width: 220px; color: #50575e; }
 .aims-status { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 12px; background: #f0f0f1; }
