@@ -65,6 +65,15 @@ class ImagePreparerTest extends TestCase {
 		$this->assertSame( 'unsupported', $result->get_error_code() );
 	}
 
+	public function test_prepare_no_file_when_attached_file_missing() {
+		Functions\when( 'get_post_mime_type' )->justReturn( 'image/jpeg' );
+		Functions\when( 'get_attached_file' )->justReturn( '' );
+		Functions\expect( 'wp_get_image_editor' )->never();
+
+		$result = ( new Image_Preparer() )->prepare( 11 );
+		$this->assertSame( 'no_file', $result->get_error_code() );
+	}
+
 	public function test_prepare_image_returns_chosen_size_path() {
 		Functions\when( 'get_post_mime_type' )->justReturn( 'image/jpeg' );
 		Functions\when( 'get_attached_file' )->justReturn( '/uploads/2026/09/photo.jpg' );
@@ -131,6 +140,38 @@ class ImagePreparerTest extends TestCase {
 		Functions\when( 'wp_get_image_editor' )->justReturn( new \WP_Error( 'image_no_editor', 'no editor' ) );
 		$result = ( new Image_Preparer() )->prepare( 9 );
 		$this->assertSame( 'resize_failed', $result->get_error_code() );
+	}
+
+	public function test_prepare_resize_failure_when_editor_resize_fails() {
+		Functions\when( 'get_post_mime_type' )->justReturn( 'image/png' );
+		Functions\when( 'get_attached_file' )->justReturn( '/uploads/big.png' );
+		Functions\when( 'wp_get_attachment_metadata' )->justReturn( array( 'width' => 6000, 'height' => 4000, 'sizes' => array() ) );
+
+		$editor = new class() {
+			public function resize( $w, $h, $crop ) { return new \WP_Error( 'image_resize_error', 'Could not resize image.' ); }
+			public function save( $dest ) { return array( 'path' => $dest, 'mime-type' => 'image/png' ); }
+		};
+		Functions\when( 'wp_get_image_editor' )->justReturn( $editor );
+
+		$result = ( new Image_Preparer() )->prepare( 9 );
+		$this->assertSame( 'resize_failed', $result->get_error_code() );
+		$this->assertSame( 'Could not resize image.', $result->get_error_message() );
+	}
+
+	public function test_prepare_resize_failure_when_editor_save_fails() {
+		Functions\when( 'get_post_mime_type' )->justReturn( 'image/png' );
+		Functions\when( 'get_attached_file' )->justReturn( '/uploads/big.png' );
+		Functions\when( 'wp_get_attachment_metadata' )->justReturn( array( 'width' => 6000, 'height' => 4000, 'sizes' => array() ) );
+
+		$editor = new class() {
+			public function resize( $w, $h, $crop ) { return true; }
+			public function save( $dest ) { return new \WP_Error( 'image_save_error', 'Could not save image.' ); }
+		};
+		Functions\when( 'wp_get_image_editor' )->justReturn( $editor );
+
+		$result = ( new Image_Preparer() )->prepare( 9 );
+		$this->assertSame( 'resize_failed', $result->get_error_code() );
+		$this->assertSame( 'Could not save the resized copy.', $result->get_error_message() );
 	}
 
 	public function test_cleanup_removes_only_temporary_files() {
