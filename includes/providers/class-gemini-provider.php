@@ -93,7 +93,10 @@ final class Gemini_Provider extends Abstract_Provider {
 			return new \WP_Error( 'bad_response', __( 'The reply contained no candidates.', 'ai-media-search' ) );
 		}
 
-		$candidate = $data['candidates'][0];
+		$candidate = $data['candidates'][0] ?? null;
+		if ( ! is_array( $candidate ) ) {
+			return new \WP_Error( 'bad_response', __( 'The reply contained no candidates.', 'ai-media-search' ) );
+		}
 		if ( 'SAFETY' === ( $candidate['finishReason'] ?? '' ) ) {
 			return new \WP_Error( 'refused', __( 'The model declined to describe this image.', 'ai-media-search' ) );
 		}

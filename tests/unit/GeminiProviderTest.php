@@ -69,6 +69,13 @@ class GeminiProviderTest extends TestCase {
 		$this->assertSame( 'refused', $result->get_error_code() );
 	}
 
+	public function test_non_array_candidate_is_bad_response() {
+		$body = array( 'candidates' => 'oops' );
+		Functions\when( 'wp_remote_post' )->justReturn( $this->response( 200, $body ) );
+		$result = ( new Gemini_Provider( 'k', 'm' ) )->describe( $this->file, 'image/webp', 'i' );
+		$this->assertSame( 'bad_response', $result->get_error_code() );
+	}
+
 	public function test_prompt_block_is_refused() {
 		$body = array( 'promptFeedback' => array( 'blockReason' => 'SAFETY' ) );
 		Functions\when( 'wp_remote_post' )->justReturn( $this->response( 200, $body ) );

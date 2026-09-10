@@ -23,7 +23,8 @@ class QueueTest extends TestCase {
 
 	/** PHP's time() cannot be stubbed, so match "at least now + delay". */
 	private function at_least( int $delay ) {
-		return \Mockery::on( function ( $timestamp ) use ( $delay ) { return $timestamp >= time() + $delay; } );
+		$before = time();
+		return \Mockery::on( function ( $timestamp ) use ( $before, $delay ) { return $timestamp >= $before + $delay; } );
 	}
 
 	public function test_schedule_adds_single_event_once() {

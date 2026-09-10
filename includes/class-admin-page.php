@@ -156,7 +156,16 @@ final class Admin_Page {
 		);
 
 		if ( ! $has_key ) {
-			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Add an API key on the Settings tab before indexing.', 'ai-media-search' ) . '</p></div>';
+			$link = '<a href="#settings" class="aims-tab-link">' . esc_html__( 'Settings tab', 'ai-media-search' ) . '</a>';
+			/* translators: %s: "Settings tab" link */
+			$html         = sprintf( esc_html__( 'Add an API key on the %s before indexing.', 'ai-media-search' ), $link );
+			$allowed_html = array(
+				'a' => array(
+					'href'  => array(),
+					'class' => array(),
+				),
+			);
+			echo '<div class="notice notice-warning inline"><p>' . wp_kses( $html, $allowed_html ) . '</p></div>';
 		}
 
 		echo '<div class="aims-cards">';
@@ -260,6 +269,7 @@ final class Admin_Page {
 	}
 
 	private function render_settings( array $settings ): void {
+		settings_errors( 'aims_settings_group' );
 		?>
 		<div class="notice notice-info inline"><p><?php esc_html_e( 'Images and PDF previews are sent to the selected third-party API for analysis. Check the provider\'s terms and privacy policy before enabling.', 'ai-media-search' ); ?></p></div>
 		<form method="post" action="options.php" class="aims-settings-form">

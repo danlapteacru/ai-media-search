@@ -42,13 +42,17 @@
 		document.querySelectorAll( '.aims-status-wrap[data-id="' + id + '"]' ).forEach( function ( el ) {
 			el.innerHTML = statusHtml( item );
 		} );
-		document.querySelectorAll( '.aims-tags[data-id="' + id + '"]' ).forEach( function ( el ) {
-			el.textContent = ( item.tags || [] ).join( ', ' );
-		} );
+		if ( item.tags !== undefined ) {
+			document.querySelectorAll( '.aims-tags[data-id="' + id + '"]' ).forEach( function ( el ) {
+				el.textContent = item.tags.join( ', ' );
+			} );
+		}
 		var row = document.querySelector( '.aims-row[data-id="' + id + '"]' );
 		if ( row ) {
 			row.querySelector( '.aims-description' ).textContent = item.description || '';
-			row.querySelector( '.aims-tags' ).textContent = ( item.tags || [] ).join( ', ' );
+			if ( item.tags !== undefined ) {
+				row.querySelector( '.aims-tags' ).textContent = item.tags.join( ', ' );
+			}
 			var btn = row.querySelector( '.aims-index-one' );
 			if ( btn ) {
 				btn.textContent = item.status === 'indexed' ? i18n.regenerate : i18n.index;
@@ -77,7 +81,16 @@
 			history.replaceState( null, '', '#' + tab.dataset.tab );
 		} );
 	} );
-	if ( location.hash === '#settings' ) {
+	document.addEventListener( 'click', function ( e ) {
+		var link = e.target.closest( '.aims-tab-link' );
+		if ( ! link ) {
+			return;
+		}
+		e.preventDefault();
+		activateTab( 'settings' );
+		history.replaceState( null, '', '#settings' );
+	} );
+	if ( location.hash === '#settings' || location.search.indexOf( 'settings-updated=true' ) !== -1 ) {
 		activateTab( 'settings' );
 	}
 
@@ -121,7 +134,7 @@
 		btn.disabled = true;
 		btn.textContent = i18n.working;
 		api( 'index/' + id, {} ).then( applyResult ).catch( function ( err ) {
-			applyResult( { id: id, status: 'failed', error: err.message, tags: [] } );
+			applyResult( { id: id, status: 'failed', error: err.message } );
 		} ).then( function () {
 			btn.disabled = false;
 			if ( btn.textContent === i18n.working ) {
