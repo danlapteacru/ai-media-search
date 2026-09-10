@@ -169,7 +169,7 @@ transient for 60 seconds and cleared by the indexer after every write.
 ```php
 interface Provider_Interface {
     /** @return Description_Result|\WP_Error */
-    public function describe( string $file_path, string $mime_type, string $language );
+    public function describe( string $file_path, string $mime_type, string $instructions );
     /** @return true|\WP_Error */
     public function test_connection();
     public static function get_id(): string;
@@ -342,8 +342,8 @@ implementation covers list view, grid view, and the editor.
   using the same escaped term. WP's own AND-across-terms structure is kept, so a
   two-word query still requires both words.
 
-Terms are lowercased before matching, and `_aims_search_text` is stored lowercase,
-so results do not depend on collation.
+`_aims_search_text` is stored lowercase; the default utf8mb4 collations compare
+case-insensitively, so search terms need no extra handling.
 
 ### `AIMS\Attachment_Fields`
 
@@ -367,7 +367,7 @@ All routes require a logged-in user and a valid REST nonce.
 |---|---|---|---|
 | `/aims/v1/index/{id}` | POST | `upload_files` and `edit_post` on the ID | Runs the indexer synchronously and returns the stored fields. |
 | `/aims/v1/bulk` | POST | `manage_options` | Body: optional `ids` (int[]), `batch_size`, `retry_failed`. With `ids`, indexes up to `batch_size` of them and returns the rest as `remaining_ids`. Without, selects the next N attachment IDs whose status is missing (or `failed` when `retry_failed`), indexes each, returns per-ID results and the remaining count. |
-| `/aims/v1/bulk/stats` | GET | `manage_options` | Returns the counts shown on the settings panel. |
+| `/aims/v1/stats` | GET | `manage_options` | Returns the counts shown on the settings panel. |
 | `/aims/v1/test` | POST | `manage_options` | Calls `test_connection()` on the saved provider. |
 
 ### Assets — `assets/admin.js`, `assets/admin.css`
