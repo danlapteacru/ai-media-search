@@ -12,12 +12,12 @@
 defined( 'ABSPATH' ) || exit;
 
 spl_autoload_register(
-	function ( $class ) {
-		if ( 0 !== strpos( $class, 'AIMS\\' ) ) {
+	function ( $class_name ) {
+		if ( 0 !== strpos( $class_name, 'AIMS\\' ) ) {
 			return;
 		}
 
-		$relative = substr( $class, 5 );
+		$relative = substr( $class_name, 5 );
 		$parts    = explode( '\\', $relative );
 		$name     = array_pop( $parts );
 		$slug     = strtolower( str_replace( '_', '-', $name ) );

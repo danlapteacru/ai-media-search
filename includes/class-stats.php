@@ -67,7 +67,8 @@ final class Stats {
 	public static function next_ids( int $limit, bool $retry_failed ): array {
 		global $wpdb;
 		$limit = max( 1, $limit );
-		$ids   = $wpdb->get_col( 'SELECT p.ID ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' ) . " ORDER BY p.ID ASC LIMIT {$limit}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same base query as counts(); LIMIT is an int-cast value, not user-supplied SQL.
+		$sql   = 'SELECT p.ID ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' ) . ' ORDER BY p.ID ASC LIMIT %d';
+		$ids   = $wpdb->get_col( $wpdb->prepare( $sql, $limit ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same base query as counts(); LIMIT now goes through $wpdb->prepare().
 		return array_map( 'intval', (array) $ids );
 	}
 

@@ -37,8 +37,8 @@ class Indexer {
 	private $provider_factory;
 
 	public function __construct( ?Image_Preparer $preparer = null, ?callable $provider_factory = null ) {
-		$this->preparer         = $preparer ?: new Image_Preparer();
-		$this->provider_factory = $provider_factory ?: array( Registry::class, 'active' );
+		$this->preparer         = $preparer ?? new Image_Preparer();
+		$this->provider_factory = $provider_factory ?? array( Registry::class, 'active' );
 	}
 
 	/**

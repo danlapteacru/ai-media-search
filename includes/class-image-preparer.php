@@ -86,7 +86,11 @@ class Image_Preparer {
 
 		$key = self::choose_size( $metadata );
 		if ( 'full' === $key ) {
-			return array( 'path' => $original, 'mime' => $mime, 'temporary' => false );
+			return array(
+				'path'      => $original,
+				'mime'      => $mime,
+				'temporary' => false,
+			);
 		}
 		if ( null !== $key && isset( $metadata['sizes'][ $key ]['file'] ) ) {
 			$size = $metadata['sizes'][ $key ];
@@ -112,8 +116,8 @@ class Image_Preparer {
 		if ( is_wp_error( $resized ) ) {
 			return new \WP_Error( 'resize_failed', $resized->get_error_message() );
 		}
-		$ext  = pathinfo( $original, PATHINFO_EXTENSION );
-		$dest = get_temp_dir() . 'aims-' . $attachment_id . '-' . wp_rand( 1000, 9999 ) . '.' . $ext;
+		$ext   = pathinfo( $original, PATHINFO_EXTENSION );
+		$dest  = get_temp_dir() . 'aims-' . $attachment_id . '-' . wp_rand( 1000, 9999 ) . '.' . $ext;
 		$saved = $editor->save( $dest );
 		if ( is_wp_error( $saved ) || empty( $saved['path'] ) ) {
 			return new \WP_Error( 'resize_failed', __( 'Could not save the resized copy.', 'ai-media-search' ) );

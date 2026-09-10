@@ -24,8 +24,8 @@ final class Claude_Provider extends Abstract_Provider {
 
 	public static function get_known_models(): array {
 		return array(
-			'claude-opus-5'   => __( 'Highest quality, about $0.015 per image', 'ai-media-search' ),
-			'claude-sonnet-5' => __( 'Balanced, about $0.006 per image', 'ai-media-search' ),
+			'claude-opus-5'    => __( 'Highest quality, about $0.015 per image', 'ai-media-search' ),
+			'claude-sonnet-5'  => __( 'Balanced, about $0.006 per image', 'ai-media-search' ),
 			'claude-haiku-4-5' => __( 'Fastest and cheapest, about $0.003 per image', 'ai-media-search' ),
 		);
 	}

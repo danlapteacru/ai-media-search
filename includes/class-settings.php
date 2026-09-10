@@ -99,7 +99,7 @@ final class Settings {
 		$out['fill_alt']      = ! empty( $input['fill_alt'] );
 
 		$batch             = (int) ( $input['batch_size'] ?? 3 );
-		$out['batch_size'] = max( 1, min( 10, $batch ?: 3 ) );
+		$out['batch_size'] = max( 1, min( 10, 0 === $batch ? 3 : $batch ) );
 
 		return $out;
 	}

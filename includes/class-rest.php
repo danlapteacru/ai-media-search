@@ -27,7 +27,12 @@ final class Rest {
 				'methods'             => 'POST',
 				'callback'            => array( $this, 'index_one' ),
 				'permission_callback' => array( $this, 'can_edit_attachment' ),
-				'args'                => array( 'id' => array( 'type' => 'integer', 'required' => true ) ),
+				'args'                => array(
+					'id' => array(
+						'type'     => 'integer',
+						'required' => true,
+					),
+				),
 			)
 		);
 		register_rest_route(
@@ -38,9 +43,19 @@ final class Rest {
 				'callback'            => array( $this, 'bulk' ),
 				'permission_callback' => array( $this, 'can_manage' ),
 				'args'                => array(
-					'ids'          => array( 'type' => 'array', 'required' => false ),
-					'batch_size'   => array( 'type' => 'integer', 'required' => false ),
-					'retry_failed' => array( 'type' => 'boolean', 'required' => false, 'default' => false ),
+					'ids'          => array(
+						'type'     => 'array',
+						'required' => false,
+					),
+					'batch_size'   => array(
+						'type'     => 'integer',
+						'required' => false,
+					),
+					'retry_failed' => array(
+						'type'     => 'boolean',
+						'required' => false,
+						'default'  => false,
+					),
 				),
 			)
 		);
@@ -182,11 +197,21 @@ final class Rest {
 	public function test() {
 		$provider = Registry::active();
 		if ( is_wp_error( $provider ) ) {
-			return rest_ensure_response( array( 'ok' => false, 'message' => $provider->get_error_message() ) );
+			return rest_ensure_response(
+				array(
+					'ok'      => false,
+					'message' => $provider->get_error_message(),
+				)
+			);
 		}
 		$outcome = $provider->test_connection();
 		if ( is_wp_error( $outcome ) ) {
-			return rest_ensure_response( array( 'ok' => false, 'message' => $outcome->get_error_message() ) );
+			return rest_ensure_response(
+				array(
+					'ok'      => false,
+					'message' => $outcome->get_error_message(),
+				)
+			);
 		}
 		return rest_ensure_response(
 			array(

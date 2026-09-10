@@ -35,9 +35,10 @@ final class Admin_Page {
 	}
 
 	public function enqueue( string $hook ): void {
-		$is_our_page  = 'toplevel_page_' . self::SLUG === $hook;
-		$is_media     = 'upload.php' === $hook;
-		$is_edit_att  = 'post.php' === $hook && 'attachment' === get_post_type( (int) ( $_GET['post'] ?? 0 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$is_our_page = 'toplevel_page_' . self::SLUG === $hook;
+		$is_media    = 'upload.php' === $hook;
+		$post_id     = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check to decide whether to enqueue assets.
+		$is_edit_att = 'post.php' === $hook && 'attachment' === get_post_type( $post_id );
 		if ( $is_our_page || $is_media || $is_edit_att ) {
 			$this->enqueue_for_media();
 		}
@@ -58,14 +59,14 @@ final class Admin_Page {
 				'batchSize' => (int) Settings::get( 'batch_size' ),
 				'hasKey'    => '' !== Settings::get_api_key( (string) Settings::get( 'provider' ) ),
 				'i18n'      => array(
-					'working'    => __( 'Working…', 'ai-media-search' ),
-					'done'       => __( 'Done.', 'ai-media-search' ),
-					'stopped'    => __( 'Stopped.', 'ai-media-search' ),
-					'failed'     => __( 'Request failed.', 'ai-media-search' ),
-					'regenerate' => __( 'Regenerate', 'ai-media-search' ),
-					'index'      => __( 'Index', 'ai-media-search' ),
-					'progress'   => /* translators: 1: done count, 2: total count */ __( '%1$s of %2$s', 'ai-media-search' ),
-					'noSelection' => __( 'Select at least one file first.', 'ai-media-search' ),
+					'working'      => __( 'Working…', 'ai-media-search' ),
+					'done'         => __( 'Done.', 'ai-media-search' ),
+					'stopped'      => __( 'Stopped.', 'ai-media-search' ),
+					'failed'       => __( 'Request failed.', 'ai-media-search' ),
+					'regenerate'   => __( 'Regenerate', 'ai-media-search' ),
+					'index'        => __( 'Index', 'ai-media-search' ),
+					'progress'     => /* translators: 1: done count, 2: total count */ __( '%1$s of %2$s', 'ai-media-search' ),
+					'noSelection'  => __( 'Select at least one file first.', 'ai-media-search' ),
 					'statusLabels' => array(
 						Indexer::STATUS_INDEXED => Attachment_Fields::status_label( Indexer::STATUS_INDEXED ),
 						Indexer::STATUS_FAILED  => Attachment_Fields::status_label( Indexer::STATUS_FAILED ),
@@ -83,12 +84,23 @@ final class Admin_Page {
 			case 'indexed':
 			case 'failed':
 			case 'skipped':
-				return array( array( 'key' => Indexer::META_STATUS, 'value' => $filter ) );
+				return array(
+					array(
+						'key'   => Indexer::META_STATUS,
+						'value' => $filter,
+					),
+				);
 			case 'not_indexed':
 				return array(
 					'relation' => 'OR',
-					array( 'key' => Indexer::META_STATUS, 'compare' => 'NOT EXISTS' ),
-					array( 'key' => Indexer::META_STATUS, 'value' => Indexer::STATUS_PENDING ),
+					array(
+						'key'     => Indexer::META_STATUS,
+						'compare' => 'NOT EXISTS',
+					),
+					array(
+						'key'   => Indexer::META_STATUS,
+						'value' => Indexer::STATUS_PENDING,
+					),
 				);
 			default:
 				return array();
@@ -131,7 +143,8 @@ final class Admin_Page {
 	private function render_dashboard( bool $has_key ): void {
 		$filter = sanitize_key( (string) ( $_GET['filter'] ?? 'all' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$filter = in_array( $filter, self::FILTERS, true ) ? $filter : 'all';
-		$paged  = max( 1, (int) ( $_GET['paged'] ?? 1 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$paged  = isset( $_GET['paged'] ) ? absint( wp_unslash( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination; no state change.
+		$paged  = max( 1, $paged );
 		$counts = Stats::counts();
 
 		$cards = array(
@@ -148,7 +161,13 @@ final class Admin_Page {
 
 		echo '<div class="aims-cards">';
 		foreach ( $cards as $key => list( $label, $count ) ) {
-			$url   = add_query_arg( array( 'page' => self::SLUG, 'filter' => $key ), admin_url( 'admin.php' ) ) . '#dashboard';
+			$url   = add_query_arg(
+				array(
+					'page'   => self::SLUG,
+					'filter' => $key,
+				),
+				admin_url( 'admin.php' )
+			) . '#dashboard';
 			$class = 'aims-card aims-card-' . $key . ( $key === $filter ? ' is-active' : '' );
 			echo '<a class="' . esc_attr( $class ) . '" href="' . esc_url( $url ) . '"><span class="aims-card-count">' . esc_html( number_format_i18n( $count ) ) . '</span><span class="aims-card-label">' . esc_html( $label ) . '</span></a>';
 		}
@@ -209,7 +228,14 @@ final class Admin_Page {
 		<?php
 		$links = paginate_links(
 			array(
-				'base'      => add_query_arg( array( 'page' => self::SLUG, 'filter' => $filter, 'paged' => '%#%' ), admin_url( 'admin.php' ) ) . '#dashboard',
+				'base'      => add_query_arg(
+					array(
+						'page'   => self::SLUG,
+						'filter' => $filter,
+						'paged'  => '%#%',
+					),
+					admin_url( 'admin.php' )
+				) . '#dashboard',
 				'format'    => '',
 				'current'   => $paged,
 				'total'     => (int) $query->max_num_pages,

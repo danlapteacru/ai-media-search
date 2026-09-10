@@ -19,7 +19,7 @@ final class Queue {
 	private $indexer;
 
 	public function __construct( ?Indexer $indexer = null ) {
-		$this->indexer = $indexer ?: new Indexer();
+		$this->indexer = $indexer ?? new Indexer();
 	}
 
 	public function register(): void {
