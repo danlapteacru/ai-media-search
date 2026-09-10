@@ -27,5 +27,9 @@ final class Plugin {
 		( new Search() )->register();
 		( new Rest() )->register();
 		( new Attachment_Fields() )->register();
+
+		if ( is_admin() ) {
+			( new Admin_Page() )->register();
+		}
 	}
 }

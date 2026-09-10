@@ -1,0 +1,30 @@
+.aims-wrap .aims-tabs { margin-bottom: 16px; }
+.aims-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0; }
+.aims-card { display: block; padding: 14px 16px; background: #fff; border: 1px solid #c3c4c7; border-left-width: 4px; text-decoration: none; color: #1d2327; }
+.aims-card:hover, .aims-card.is-active { border-color: #2271b1; box-shadow: 0 0 0 1px #2271b1; }
+.aims-card-count { display: block; font-size: 24px; font-weight: 600; line-height: 1.2; }
+.aims-card-label { display: block; color: #646970; }
+.aims-card-indexed { border-left-color: #00a32a; }
+.aims-card-not_indexed { border-left-color: #dba617; }
+.aims-card-failed { border-left-color: #d63638; }
+.aims-card-skipped { border-left-color: #8c8f94; }
+.aims-table .aims-file img { float: left; margin-right: 8px; width: 60px; height: 60px; object-fit: cover; }
+.aims-table .aims-description { max-width: 360px; }
+.aims-table .aims-tags { max-width: 220px; color: #50575e; }
+.aims-status { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 12px; background: #f0f0f1; }
+.aims-status-indexed { background: #edfaef; color: #00600f; }
+.aims-status-failed { background: #fcf0f1; color: #8a1f22; }
+.aims-status-pending { background: #fcf9e8; color: #8a6d00; }
+.aims-muted { color: #646970; }
+.aims-error { color: #d63638; }
+.aims-ok { color: #00a32a; }
+.aims-controls { margin-top: 16px; }
+.aims-controls .button { margin-right: 6px; }
+.aims-progress { height: 10px; margin: 12px 0; background: #dcdcde; border-radius: 5px; overflow: hidden; max-width: 600px; }
+.aims-progress-bar { height: 100%; width: 0; background: #2271b1; transition: width .3s ease; }
+.aims-log { max-height: 240px; overflow: auto; margin: 0; padding: 8px 12px; background: #fff; border: 1px solid #c3c4c7; max-width: 600px; font-family: monospace; font-size: 12px; }
+.aims-log li { margin: 0 0 2px; }
+.aims-log-fail { color: #d63638; }
+.aims-provider-choice { margin-right: 16px; }
+.aims-custom-model { margin-top: 6px; display: block; }
+.aims-custom-model[hidden] { display: none; }
