@@ -2,13 +2,13 @@
 Contributors: danlapteacru
 Tags: media library, search, ai, alt text, images
 Requires at least: 6.0
-Tested up to: 6.9
+Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Search your Media Library by what is in the picture. A vision model describes each image so the search box finds "woman on a beach" even when nobody typed it.
+Search your Media Library by what is in the picture. An AI vision model describes each image so the search box finds it.
 
 == Description ==
 
