@@ -99,6 +99,16 @@ final class Rest {
 		return $ids;
 	}
 
+	/**
+	 * Whether the client explicitly sent an `ids` parameter, as opposed to
+	 * omitting it entirely (in which case the server picks the batch).
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 */
+	public static function is_explicit_mode( $request ): bool {
+		return $request->has_param( 'ids' );
+	}
+
 	private static function result_for( int $id, $outcome ): array {
 		$payload          = Indexer::payload( $id );
 		$payload['ok']    = ! is_wp_error( $outcome );
@@ -126,12 +136,16 @@ final class Rest {
 	 * @param \WP_REST_Request $request Request.
 	 */
 	public function bulk( $request ) {
-		$batch_size   = (int) ( $request['batch_size'] ?? 0 );
-		$batch_size   = $batch_size > 0 ? min( 10, $batch_size ) : (int) Settings::get( 'batch_size' );
-		$retry_failed = ! empty( $request['retry_failed'] );
-		$explicit     = self::normalize_ids( $request['ids'] ?? null );
+		$batch_size    = (int) ( $request['batch_size'] ?? 0 );
+		$batch_size    = $batch_size > 0 ? min( 10, $batch_size ) : (int) Settings::get( 'batch_size' );
+		$retry_failed  = ! empty( $request['retry_failed'] );
+		$explicit_mode = self::is_explicit_mode( $request );
+		$explicit      = $explicit_mode ? self::normalize_ids( $request['ids'] ?? null ) : array();
 
-		if ( $explicit ) {
+		if ( $explicit_mode ) {
+			// The client named ids explicitly, even if the list normalizes to
+			// empty (all invalid) or was sent empty; never substitute a
+			// server-selected batch in that case.
 			$ids       = array_slice( $explicit, 0, $batch_size );
 			$remaining = array_slice( $explicit, $batch_size );
 		} else {
@@ -155,7 +169,7 @@ final class Rest {
 			array(
 				'results'         => $results,
 				'remaining_ids'   => array_values( $remaining ),
-				'remaining_count' => $explicit ? count( $remaining ) : Stats::remaining_count( $retry_failed ),
+				'remaining_count' => $explicit_mode ? count( $remaining ) : Stats::remaining_count( $retry_failed ),
 				'stats'           => Stats::counts(),
 			)
 		);

@@ -10,4 +10,15 @@ class RestTest extends TestCase {
 		$this->assertSame( array(), Rest::normalize_ids( 'nope' ) );
 		$this->assertSame( array( 1 ), Rest::normalize_ids( '1' ) );
 	}
+
+	public function test_is_explicit_mode() {
+		$with_ids = new class() {
+			public function has_param( $key ) { return 'ids' === $key; }
+		};
+		$without_ids = new class() {
+			public function has_param( $key ) { return false; }
+		};
+		$this->assertTrue( Rest::is_explicit_mode( $with_ids ) );
+		$this->assertFalse( Rest::is_explicit_mode( $without_ids ) );
+	}
 }

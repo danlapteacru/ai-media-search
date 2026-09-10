@@ -44,7 +44,7 @@ final class Stats {
 		}
 
 		global $wpdb;
-		$rows = $wpdb->get_results( "SELECT COALESCE(m.meta_value, 'none') AS status, COUNT(*) AS n " . self::base_from() . ' GROUP BY status' ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery
+		$rows = $wpdb->get_results( "SELECT COALESCE(m.meta_value, 'none') AS status, COUNT(*) AS n " . self::base_from() . ' GROUP BY status' ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Aggregate over post meta; every literal is a class constant or passed through $wpdb->prepare() in mime_in_sql().
 
 		$by = array();
 		foreach ( (array) $rows as $row ) {
@@ -67,12 +67,12 @@ final class Stats {
 	public static function next_ids( int $limit, bool $retry_failed ): array {
 		global $wpdb;
 		$limit = max( 1, $limit );
-		$ids   = $wpdb->get_col( 'SELECT p.ID ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' ) . " ORDER BY p.ID ASC LIMIT {$limit}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery
+		$ids   = $wpdb->get_col( 'SELECT p.ID ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' ) . " ORDER BY p.ID ASC LIMIT {$limit}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same base query as counts(); LIMIT is an int-cast value, not user-supplied SQL.
 		return array_map( 'intval', (array) $ids );
 	}
 
 	public static function remaining_count( bool $retry_failed ): int {
 		global $wpdb;
-		return (int) $wpdb->get_var( 'SELECT COUNT(*) ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery
+		return (int) $wpdb->get_var( 'SELECT COUNT(*) ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same status_where() clause as next_ids(); all literals are class constants or prepared.
 	}
 }
