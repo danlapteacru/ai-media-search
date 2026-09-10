@@ -24,5 +24,6 @@ final class Plugin {
 		load_plugin_textdomain( 'ai-media-search', false, dirname( plugin_basename( AIMS_FILE ) ) . '/languages' );
 		( new Settings() )->register();
 		( new Queue() )->register();
+		( new Search() )->register();
 	}
 }
