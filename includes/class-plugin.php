@@ -26,5 +26,6 @@ final class Plugin {
 		( new Queue() )->register();
 		( new Search() )->register();
 		( new Rest() )->register();
+		( new Attachment_Fields() )->register();
 	}
 }
