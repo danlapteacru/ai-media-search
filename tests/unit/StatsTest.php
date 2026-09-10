@@ -18,6 +18,7 @@ class StatsTest extends TestCase {
 			public $last_sql = '';
 			public $rows     = array();
 			public function prepare( $sql, ...$args ) {
+				if ( 1 === count( $args ) && is_array( $args[0] ) ) { $args = $args[0]; }
 				foreach ( $args as $a ) { $sql = preg_replace( '/%[sd]/', is_int( $a ) ? $a : "'" . $a . "'", $sql, 1 ); }
 				return $sql;
 			}
@@ -50,10 +51,6 @@ class StatsTest extends TestCase {
 		$this->assertStringContainsString( "post_mime_type IN ('image/jpeg'", $GLOBALS['wpdb']->last_sql );
 	}
 
-	public function test_status_where() {
-		$this->assertSame( "(m.meta_value IS NULL OR m.meta_value = 'pending')", Stats::status_where( false, 'm' ) );
-		$this->assertSame( "(m.meta_value IS NULL OR m.meta_value = 'pending' OR m.meta_value = 'failed')", Stats::status_where( true, 'm' ) );
-	}
 
 	public function test_next_ids_and_remaining() {
 		$this->assertSame( array( 3, 5 ), Stats::next_ids( 2, false ) );
@@ -70,7 +67,7 @@ class StatsTest extends TestCase {
 
 	public function test_next_ids_without_cursor_has_no_id_filter() {
 		Stats::next_ids( 2, false );
-		$this->assertStringNotContainsString( 'p.ID >', $GLOBALS['wpdb']->last_sql );
+		$this->assertStringContainsString( 'p.ID > 0', $GLOBALS['wpdb']->last_sql );
 	}
 
 	public function test_remaining_count_with_cursor_adds_id_filter() {

@@ -2,6 +2,10 @@
 /**
  * Dashboard counts and "what to index next" queries.
  *
+ * Every query here is a single prepared statement. The eligible mime list is
+ * five values (four image types plus PDF), so the IN clauses carry exactly
+ * five placeholders; keep that in sync with Image_Preparer::IMAGE_MIMES.
+ *
  * @package AIMS
  */
 
@@ -10,28 +14,19 @@ namespace AIMS;
 defined( 'ABSPATH' ) || exit;
 
 final class Stats {
-	public static function mime_in_sql(): string {
-		global $wpdb;
-		$mimes = array_merge( Image_Preparer::IMAGE_MIMES, array( Image_Preparer::PDF_MIME ) );
-		$parts = array();
-		foreach ( $mimes as $mime ) {
-			$parts[] = $wpdb->prepare( '%s', $mime );
-		}
-		return '(' . implode( ',', $parts ) . ')';
+	/**
+	 * @return string[] The five eligible mime types.
+	 */
+	private static function mimes(): array {
+		return array_merge( Image_Preparer::IMAGE_MIMES, array( Image_Preparer::PDF_MIME ) );
 	}
 
-	public static function status_where( bool $retry_failed, string $alias ): string {
-		$where = "({$alias}.meta_value IS NULL OR {$alias}.meta_value = '" . Indexer::STATUS_PENDING . "'";
-		if ( $retry_failed ) {
-			$where .= " OR {$alias}.meta_value = '" . Indexer::STATUS_FAILED . "'";
-		}
-		return $where . ')';
-	}
-
-	private static function base_from(): string {
-		global $wpdb;
-		return "FROM {$wpdb->posts} p LEFT JOIN {$wpdb->postmeta} m ON (m.post_id = p.ID AND m.meta_key = '" . Indexer::META_STATUS . "') "
-			. "WHERE p.post_type = 'attachment' AND p.post_status = 'inherit' AND p.post_mime_type IN " . self::mime_in_sql();
+	/**
+	 * The second status that counts as pending work. When failed files are not
+	 * being retried it repeats "pending" so the SQL shape stays fixed.
+	 */
+	private static function second_status( bool $retry_failed ): string {
+		return $retry_failed ? Indexer::STATUS_FAILED : Indexer::STATUS_PENDING;
 	}
 
 	/**
@@ -44,7 +39,24 @@ final class Stats {
 		}
 
 		global $wpdb;
-		$rows = $wpdb->get_results( "SELECT COALESCE(m.meta_value, 'none') AS status, COUNT(*) AS n " . self::base_from() . ' GROUP BY status' ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Aggregate over post meta; every literal is a class constant or passed through $wpdb->prepare() in mime_in_sql().
+		$mimes = self::mimes();
+		$rows  = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Aggregate count over post meta; the result is cached in a transient and cleared by the indexer.
+			$wpdb->prepare(
+				"SELECT COALESCE(m.meta_value, 'none') AS status, COUNT(*) AS n
+				FROM {$wpdb->posts} p
+				LEFT JOIN {$wpdb->postmeta} m ON (m.post_id = p.ID AND m.meta_key = %s)
+				WHERE p.post_type = 'attachment'
+					AND p.post_status = 'inherit'
+					AND p.post_mime_type IN (%s, %s, %s, %s, %s)
+				GROUP BY status",
+				Indexer::META_STATUS,
+				$mimes[0],
+				$mimes[1],
+				$mimes[2],
+				$mimes[3],
+				$mimes[4]
+			)
+		);
 
 		$by = array();
 		foreach ( (array) $rows as $row ) {
@@ -62,26 +74,68 @@ final class Stats {
 	}
 
 	/**
+	 * Next attachment IDs that still need indexing, after the given cursor.
+	 *
 	 * @return int[]
 	 */
 	public static function next_ids( int $limit, bool $retry_failed, int $after_id = 0 ): array {
 		global $wpdb;
-		$limit = max( 1, $limit );
-		$sql   = 'SELECT p.ID ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' );
-		if ( $after_id > 0 ) {
-			$sql .= $wpdb->prepare( ' AND p.ID > %d', $after_id );
-		}
-		$sql .= ' ORDER BY p.ID ASC LIMIT %d';
-		$ids  = $wpdb->get_col( $wpdb->prepare( $sql, $limit ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same base query as counts(); the after_id and LIMIT clauses each go through $wpdb->prepare().
+		$mimes  = self::mimes();
+		$second = self::second_status( $retry_failed );
+		$ids    = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Cursor-paged selection of unindexed attachments; not cacheable because every batch changes it.
+			$wpdb->prepare(
+				"SELECT p.ID
+				FROM {$wpdb->posts} p
+				LEFT JOIN {$wpdb->postmeta} m ON (m.post_id = p.ID AND m.meta_key = %s)
+				WHERE p.post_type = 'attachment'
+					AND p.post_status = 'inherit'
+					AND p.post_mime_type IN (%s, %s, %s, %s, %s)
+					AND (m.meta_value IS NULL OR m.meta_value = %s OR m.meta_value = %s)
+					AND p.ID > %d
+				ORDER BY p.ID ASC
+				LIMIT %d",
+				Indexer::META_STATUS,
+				$mimes[0],
+				$mimes[1],
+				$mimes[2],
+				$mimes[3],
+				$mimes[4],
+				Indexer::STATUS_PENDING,
+				$second,
+				max( 0, $after_id ),
+				max( 1, $limit )
+			)
+		);
 		return array_map( 'intval', (array) $ids );
 	}
 
+	/**
+	 * How many attachments still need indexing after the given cursor.
+	 */
 	public static function remaining_count( bool $retry_failed, int $after_id = 0 ): int {
 		global $wpdb;
-		$sql = 'SELECT COUNT(*) ' . self::base_from() . ' AND ' . self::status_where( $retry_failed, 'm' );
-		if ( $after_id > 0 ) {
-			$sql = $wpdb->prepare( $sql . ' AND p.ID > %d', $after_id ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Same status_where() clause as next_ids(); the after_id clause goes through $wpdb->prepare().
-		}
-		return (int) $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- Same status_where() clause as next_ids(); all literals are class constants or prepared.
+		$mimes  = self::mimes();
+		$second = self::second_status( $retry_failed );
+		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Same selection as next_ids(); read once per batch.
+			$wpdb->prepare(
+				"SELECT COUNT(*)
+				FROM {$wpdb->posts} p
+				LEFT JOIN {$wpdb->postmeta} m ON (m.post_id = p.ID AND m.meta_key = %s)
+				WHERE p.post_type = 'attachment'
+					AND p.post_status = 'inherit'
+					AND p.post_mime_type IN (%s, %s, %s, %s, %s)
+					AND (m.meta_value IS NULL OR m.meta_value = %s OR m.meta_value = %s)
+					AND p.ID > %d",
+				Indexer::META_STATUS,
+				$mimes[0],
+				$mimes[1],
+				$mimes[2],
+				$mimes[3],
+				$mimes[4],
+				Indexer::STATUS_PENDING,
+				$second,
+				max( 0, $after_id )
+			)
+		);
 	}
 }
