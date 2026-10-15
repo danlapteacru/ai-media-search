@@ -1,4 +1,4 @@
-=== AI Media Search ===
+=== Sightdex Media Search ===
 Contributors: d1sabled
 Tags: media library, search, ai, alt text, images
 Requires at least: 6.0
@@ -12,7 +12,7 @@ Search your Media Library by what is in the picture. An AI vision model describe
 
 == Description ==
 
-The WordPress media search only matches titles, captions, and descriptions. AI Media Search sends each image (and the first-page preview of each PDF) to a vision model of your choice, stores the description and tags it returns, and extends the Media Library search box to match that text. It works in list view, grid view, and the media modal inside the editor.
+The WordPress media search only matches titles, captions, and descriptions. Sightdex Media Search sends each image (and the first-page preview of each PDF) to a vision model of your choice, stores the description and tags it returns, and extends the Media Library search box to match that text. It works in list view, grid view, and the media modal inside the editor.
 
 **Features**
 
@@ -43,7 +43,7 @@ The "Test connection" button sends a short text prompt to the selected provider.
 
 1. Upload the plugin folder to `/wp-content/plugins/` or install it from the Plugins screen.
 2. Activate it.
-3. Open **AI Media Search** in the admin menu, go to the Settings tab, choose a provider, paste your API key, and save.
+3. Open **Sightdex Media Search** in the admin menu, go to the Settings tab, choose a provider, paste your API key, and save.
 4. On the Dashboard tab, click **Index all not indexed** to describe your existing library.
 5. Search the Media Library for something in a picture.
 

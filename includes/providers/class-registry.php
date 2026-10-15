@@ -52,7 +52,7 @@ final class Registry {
 	public static function make( string $id ) {
 		$classes = self::classes();
 		if ( ! isset( $classes[ $id ] ) || ! class_exists( $classes[ $id ] ) ) {
-			return new \WP_Error( 'bad_provider', __( 'Unknown AI provider.', 'ai-media-search' ) );
+			return new \WP_Error( 'bad_provider', __( 'Unknown AI provider.', 'sightdex-media-search' ) );
 		}
 		$class = $classes[ $id ];
 		return new $class( Settings::get_api_key( $id ), Settings::get_model( $id ) );
