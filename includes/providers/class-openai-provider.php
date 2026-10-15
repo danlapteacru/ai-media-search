@@ -19,15 +19,15 @@ final class OpenAI_Provider extends Abstract_Provider {
 	}
 
 	public static function get_label(): string {
-		return __( 'OpenAI', 'ai-media-search' );
+		return __( 'OpenAI', 'sightdex-media-search' );
 	}
 
 	public static function get_known_models(): array {
 		return array(
-			'gpt-5.6-terra' => __( 'Balanced, about $0.007 per image', 'ai-media-search' ),
-			'gpt-5.6-luna'  => __( 'Cheapest, about $0.001 per image', 'ai-media-search' ),
-			'gpt-5.6-sol'   => __( 'High quality, about $0.012 per image', 'ai-media-search' ),
-			'gpt-6-astra'   => __( 'Flagship, about $0.03 per image', 'ai-media-search' ),
+			'gpt-5.6-terra' => __( 'Balanced, about $0.007 per image', 'sightdex-media-search' ),
+			'gpt-5.6-luna'  => __( 'Cheapest, about $0.001 per image', 'sightdex-media-search' ),
+			'gpt-5.6-sol'   => __( 'High quality, about $0.012 per image', 'sightdex-media-search' ),
+			'gpt-6-astra'   => __( 'Flagship, about $0.03 per image', 'sightdex-media-search' ),
 		);
 	}
 
@@ -88,7 +88,7 @@ final class OpenAI_Provider extends Abstract_Provider {
 
 	protected function extract_text( array $data ) {
 		if ( 'incomplete' === ( $data['status'] ?? '' ) ) {
-			return new \WP_Error( 'bad_response', __( 'The reply was cut off before it finished.', 'ai-media-search' ) );
+			return new \WP_Error( 'bad_response', __( 'The reply was cut off before it finished.', 'sightdex-media-search' ) );
 		}
 		foreach ( (array) ( $data['output'] ?? array() ) as $item ) {
 			if ( 'message' !== ( $item['type'] ?? '' ) ) {
@@ -97,13 +97,13 @@ final class OpenAI_Provider extends Abstract_Provider {
 			foreach ( (array) ( $item['content'] ?? array() ) as $part ) {
 				$type = $part['type'] ?? '';
 				if ( 'refusal' === $type ) {
-					return new \WP_Error( 'refused', __( 'The model declined to describe this image.', 'ai-media-search' ) );
+					return new \WP_Error( 'refused', __( 'The model declined to describe this image.', 'sightdex-media-search' ) );
 				}
 				if ( 'output_text' === $type && isset( $part['text'] ) ) {
 					return (string) $part['text'];
 				}
 			}
 		}
-		return new \WP_Error( 'bad_response', __( 'The reply contained no text.', 'ai-media-search' ) );
+		return new \WP_Error( 'bad_response', __( 'The reply contained no text.', 'sightdex-media-search' ) );
 	}
 }

@@ -1,5 +1,5 @@
 {
-  "name": "danlapteacru/ai-media-search",
+  "name": "danlapteacru/sightdex-media-search",
   "description": "Search the WordPress Media Library by what is in the image.",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",

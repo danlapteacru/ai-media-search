@@ -28,7 +28,7 @@ class SettingsTest extends TestCase {
 		$this->assertTrue( $d['auto_index'] );
 		$this->assertFalse( $d['fill_alt'] );
 		$this->assertSame( 3, $d['batch_size'] );
-		$this->assertSame( array( 'claude' => '', 'openai' => '', 'gemini' => '' ), $d['api_keys'] );
+		$this->assertSame( array( 'claude' => '', 'openai' => '', 'gemini' => '', 'wp_ai_client' => '' ), $d['api_keys'] );
 	}
 
 	public function test_all_merges_saved_values_over_defaults() {

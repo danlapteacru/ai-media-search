@@ -11,12 +11,12 @@ defined( 'ABSPATH' ) || exit;
 
 final class Settings {
 	const OPTION    = 'aims_settings';
-	const PROVIDERS = array( 'claude', 'openai', 'gemini' );
+	const PROVIDERS = array( 'claude', 'openai', 'gemini', 'wp_ai_client' );
 
 	public static function defaults(): array {
 		$per_provider = array_fill_keys( self::PROVIDERS, '' );
 		return array(
-			'provider'      => 'claude',
+			'provider'      => function_exists( 'wp_ai_client_prompt' ) ? 'wp_ai_client' : 'claude',
 			'api_keys'      => $per_provider,
 			'models'        => $per_provider,
 			'custom_models' => $per_provider,

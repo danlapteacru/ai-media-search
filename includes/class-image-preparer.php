@@ -59,12 +59,12 @@ class Image_Preparer {
 	public function prepare( int $attachment_id ) {
 		$mime = (string) get_post_mime_type( $attachment_id );
 		if ( ! self::is_eligible_mime( $mime ) ) {
-			return new \WP_Error( 'unsupported', __( 'Only images and PDFs can be described.', 'ai-media-search' ) );
+			return new \WP_Error( 'unsupported', __( 'Only images and PDFs can be described.', 'sightdex-media-search' ) );
 		}
 
 		$original = (string) get_attached_file( $attachment_id );
 		if ( '' === $original ) {
-			return new \WP_Error( 'no_file', __( 'The attachment has no file.', 'ai-media-search' ) );
+			return new \WP_Error( 'no_file', __( 'The attachment has no file.', 'sightdex-media-search' ) );
 		}
 		$metadata = wp_get_attachment_metadata( $attachment_id );
 		$metadata = is_array( $metadata ) ? $metadata : array();
@@ -73,7 +73,7 @@ class Image_Preparer {
 		if ( self::PDF_MIME === $mime ) {
 			// WordPress renders PDF previews into metadata['sizes'] when Imagick is available.
 			if ( empty( $metadata['sizes'] ) ) {
-				return new \WP_Error( 'no_preview', __( 'WordPress did not generate a preview image for this PDF.', 'ai-media-search' ) );
+				return new \WP_Error( 'no_preview', __( 'WordPress did not generate a preview image for this PDF.', 'sightdex-media-search' ) );
 			}
 			$key = self::choose_size( array( 'sizes' => $metadata['sizes'] ) );
 			if ( null === $key || 'full' === $key ) {
@@ -124,7 +124,7 @@ class Image_Preparer {
 		$dest  = get_temp_dir() . 'aims-' . $attachment_id . '-' . wp_rand( 1000, 9999 ) . '.' . $ext;
 		$saved = $editor->save( $dest );
 		if ( is_wp_error( $saved ) || empty( $saved['path'] ) ) {
-			return new \WP_Error( 'resize_failed', __( 'Could not save the resized copy.', 'ai-media-search' ) );
+			return new \WP_Error( 'resize_failed', __( 'Could not save the resized copy.', 'sightdex-media-search' ) );
 		}
 		return array(
 			'path'      => (string) $saved['path'],

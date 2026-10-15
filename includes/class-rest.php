@@ -147,7 +147,7 @@ final class Rest {
 	public function index_one( $request ) {
 		$id = (int) $request['id'];
 		if ( 'attachment' !== get_post_type( $id ) ) {
-			return new \WP_Error( 'not_found', __( 'Attachment not found.', 'ai-media-search' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'not_found', __( 'Attachment not found.', 'sightdex-media-search' ), array( 'status' => 404 ) );
 		}
 		$outcome = ( new Indexer() )->index_attachment( $id );
 		return rest_ensure_response( self::result_for( $id, $outcome ) );
@@ -235,11 +235,15 @@ final class Rest {
 				)
 			);
 		}
+		$model = Settings::get_active_model();
+		if ( 'auto' === $model && Registry::is_keyless( $provider::get_id() ) ) {
+			$model = __( 'the connector\'s default model', 'sightdex-media-search' );
+		}
 		return rest_ensure_response(
 			array(
 				'ok'      => true,
 				/* translators: 1: provider label, 2: model id */
-				'message' => sprintf( __( 'Connected to %1$s using %2$s.', 'ai-media-search' ), $provider::get_label(), Settings::get_active_model() ),
+				'message' => sprintf( __( 'Connected to %1$s using %2$s.', 'sightdex-media-search' ), $provider::get_label(), $model ),
 			)
 		);
 	}

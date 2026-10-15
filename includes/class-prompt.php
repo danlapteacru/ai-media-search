@@ -71,7 +71,7 @@ final class Prompt {
 
 		$data = json_decode( $json, true );
 		if ( ! is_array( $data ) ) {
-			return new \WP_Error( 'bad_response', __( 'The AI reply was not valid JSON.', 'ai-media-search' ) );
+			return new \WP_Error( 'bad_response', __( 'The AI reply was not valid JSON.', 'sightdex-media-search' ) );
 		}
 
 		foreach ( array( 'description', 'tags', 'alt' ) as $field ) {
@@ -79,16 +79,16 @@ final class Prompt {
 				return new \WP_Error(
 					'bad_response',
 					/* translators: %s: field name */
-					sprintf( __( 'The AI reply is missing the "%s" field.', 'ai-media-search' ), $field )
+					sprintf( __( 'The AI reply is missing the "%s" field.', 'sightdex-media-search' ), $field )
 				);
 			}
 		}
 
 		if ( ! is_string( $data['description'] ) || '' === trim( $data['description'] ) ) {
-			return new \WP_Error( 'bad_response', __( 'The AI reply has an empty description.', 'ai-media-search' ) );
+			return new \WP_Error( 'bad_response', __( 'The AI reply has an empty description.', 'sightdex-media-search' ) );
 		}
 		if ( ! is_array( $data['tags'] ) || ! is_string( $data['alt'] ) ) {
-			return new \WP_Error( 'bad_response', __( 'The AI reply has the wrong field types.', 'ai-media-search' ) );
+			return new \WP_Error( 'bad_response', __( 'The AI reply has the wrong field types.', 'sightdex-media-search' ) );
 		}
 
 		$tags = array();

@@ -1,10 +1,10 @@
-=== AI Media Search ===
+=== Sightdex Media Search ===
 Contributors: d1sabled
 Tags: media library, search, ai, alt text, images
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,20 +12,20 @@ Search your Media Library by what is in the picture. An AI vision model describe
 
 == Description ==
 
-The WordPress media search only matches titles, captions, and descriptions. AI Media Search sends each image (and the first-page preview of each PDF) to a vision model of your choice, stores the description and tags it returns, and extends the Media Library search box to match that text. It works in list view, grid view, and the media modal inside the editor.
+The WordPress media search only matches titles, captions, and descriptions. Sightdex Media Search sends each image (and the first-page preview of each PDF) to a vision model of your choice, stores the description and tags it returns, and extends the Media Library search box to match that text. It works in list view, grid view, and the media modal inside the editor.
 
 **Features**
 
 * Automatic description of new uploads in the background.
 * Dashboard with counts, filters, and a batch indexer with progress for your existing library.
 * Editable AI description on every attachment, with a Regenerate button.
-* Choice of provider and model: Anthropic Claude, OpenAI, or Google Gemini. Bring your own API key.
+* Choice of provider and model: Anthropic Claude, OpenAI, or Google Gemini with your own API key, or the WordPress AI Client on WordPress 7.0 and newer, which uses the connector your site already has.
 * Optional: fill empty alt text with the AI alt sentence.
 * Optional custom prompt for house style or product names.
 
 **Requirements**
 
-You need an API key from the provider you choose. Each request costs a fraction of a cent to a few cents depending on the model; the settings screen shows an estimate next to each model.
+You need an API key from the provider you choose, unless you pick the WordPress AI Client, which uses the connector configured under Settings > Connectors. Each request costs a fraction of a cent to a few cents depending on the model; the settings screen shows an estimate next to each model.
 
 == External services ==
 
@@ -37,13 +37,15 @@ This plugin sends image data to a third-party API that you select and configure.
 
 **Google Gemini** (https://ai.google.dev/) — Same data is sent to https://generativelanguage.googleapis.com/. Terms: https://ai.google.dev/gemini-api/terms. Privacy: https://policies.google.com/privacy.
 
+**WordPress AI Client** (WordPress 7.0 and newer) — When this option is selected the plugin does not call any vendor itself. It hands the image and instruction text to the core AI Client, which sends them to whichever provider the site administrator configured under Settings > Connectors. That provider's terms and privacy policy apply.
+
 The "Test connection" button sends a short text prompt to the selected provider.
 
 == Installation ==
 
 1. Upload the plugin folder to `/wp-content/plugins/` or install it from the Plugins screen.
 2. Activate it.
-3. Open **AI Media Search** in the admin menu, go to the Settings tab, choose a provider, paste your API key, and save.
+3. Open **Sightdex Media Search** in the admin menu, go to the Settings tab, choose a provider, paste your API key (not needed for the WordPress AI Client), and save.
 4. On the Dashboard tab, click **Index all not indexed** to describe your existing library.
 5. Search the Media Library for something in a picture.
 
@@ -63,7 +65,11 @@ Yes. Every attachment has an editable "AI description" field. Your edit is what 
 
 = What does it cost? =
 
-Only what your provider charges. The model dropdown shows a rough per-image estimate. Nothing is sent unless an API key is saved, and existing files are only processed when you start the indexer.
+Only what your provider charges. The model dropdown shows a rough per-image estimate. Nothing is sent unless a provider is set up, and existing files are only processed when you start the indexer.
+
+= Do I need an API key? =
+
+Not on WordPress 7.0 or newer if your site already has an AI connector. Pick "WordPress AI Client" as the provider and the plugin uses that connector; credentials stay with WordPress. On older versions, or if you want a specific vendor and model, paste a key for Claude, OpenAI, or Gemini.
 
 == Screenshots ==
 
@@ -73,6 +79,10 @@ Only what your provider charges. The model dropdown shows a rough per-image esti
 4. Media Library search finding an image by its content.
 
 == Changelog ==
+
+= 1.1.0 =
+* New provider: WordPress AI Client (WordPress 7.0 and newer). Uses the site's configured connector, no key needed.
+* Renamed to Sightdex Media Search.
 
 = 1.0.0 =
 * First release.

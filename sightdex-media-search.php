@@ -1,22 +1,22 @@
 <?php
 /**
- * Plugin Name:       AI Media Search
- * Plugin URI:        https://wordpress.org/plugins/ai-media-search/
+ * Plugin Name:       Sightdex Media Search
+ * Plugin URI:        https://wordpress.org/plugins/sightdex-media-search/
  * Description:       Search your Media Library by what is in the image. A vision model describes each image and PDF so the media search box finds them by content.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Dan Lapteacru
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       ai-media-search
+ * Text Domain:       sightdex-media-search
  *
  * @package AIMS
  */
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'AIMS_VERSION', '1.0.0' );
+define( 'AIMS_VERSION', '1.1.0' );
 define( 'AIMS_FILE', __FILE__ );
 define( 'AIMS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'AIMS_URL', plugin_dir_url( __FILE__ ) );

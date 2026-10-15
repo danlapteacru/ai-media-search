@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="AI Media Search">
-	<description>WordPress Coding Standards for AI Media Search.</description>
+<ruleset name="Sightdex Media Search">
+	<description>WordPress Coding Standards for Sightdex Media Search.</description>
 	<file>.</file>
 	<exclude-pattern>/vendor/*</exclude-pattern>
 	<exclude-pattern>/tests/*</exclude-pattern>
@@ -22,7 +22,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="ai-media-search"/>
+				<element value="sightdex-media-search"/>
 			</property>
 		</properties>
 	</rule>
