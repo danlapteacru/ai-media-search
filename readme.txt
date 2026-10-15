@@ -29,7 +29,7 @@ You need an API key from the provider you choose, unless you pick the WordPress 
 
 == External services ==
 
-This plugin sends image data to a third-party API that you select and configure. Nothing is sent until you save an API key.
+This plugin sends image data to a third-party API that you select and configure. Nothing is sent until you save an API key, or select the WordPress AI Client on a site where an administrator has configured a connector.
 
 **Anthropic Claude** (https://www.anthropic.com/) — When an image or PDF preview is indexed, the plugin sends the image bytes, the instruction text, and your API key to https://api.anthropic.com/v1/messages. Terms: https://www.anthropic.com/legal/commercial-terms. Privacy: https://www.anthropic.com/legal/privacy.
 
