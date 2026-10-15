@@ -44,12 +44,12 @@ abstract class Abstract_Provider implements Provider_Interface {
 
 	public function describe( string $file_path, string $mime_type, string $instructions ) {
 		if ( '' === $this->api_key ) {
-			return new \WP_Error( 'auth_error', __( 'No API key is saved for this provider.', 'ai-media-search' ) );
+			return new \WP_Error( 'auth_error', __( 'No API key is saved for this provider.', 'sightdex-media-search' ) );
 		}
 
 		$bytes = is_readable( $file_path ) ? file_get_contents( $file_path ) : false; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		if ( false === $bytes || '' === $bytes ) {
-			return new \WP_Error( 'bad_file', __( 'The image file could not be read.', 'ai-media-search' ) );
+			return new \WP_Error( 'bad_file', __( 'The image file could not be read.', 'sightdex-media-search' ) );
 		}
 
 		$request = $this->build_request( base64_encode( $bytes ), $mime_type, $instructions ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
@@ -68,7 +68,7 @@ abstract class Abstract_Provider implements Provider_Interface {
 
 	public function test_connection() {
 		if ( '' === $this->api_key ) {
-			return new \WP_Error( 'auth_error', __( 'No API key is saved for this provider.', 'ai-media-search' ) );
+			return new \WP_Error( 'auth_error', __( 'No API key is saved for this provider.', 'sightdex-media-search' ) );
 		}
 		$data = $this->send( $this->build_ping_request() );
 		if ( is_wp_error( $data ) ) {
@@ -106,21 +106,21 @@ abstract class Abstract_Provider implements Provider_Interface {
 		$body = (string) wp_remote_retrieve_body( $response );
 
 		if ( 401 === $code || 403 === $code ) {
-			return new \WP_Error( 'auth_error', $this->error_message( $body, __( 'The API key was rejected.', 'ai-media-search' ) ) );
+			return new \WP_Error( 'auth_error', $this->error_message( $body, __( 'The API key was rejected.', 'sightdex-media-search' ) ) );
 		}
 		if ( 429 === $code ) {
-			return new \WP_Error( 'rate_limited', $this->error_message( $body, __( 'The provider rate limit was reached.', 'ai-media-search' ) ) );
+			return new \WP_Error( 'rate_limited', $this->error_message( $body, __( 'The provider rate limit was reached.', 'sightdex-media-search' ) ) );
 		}
 		if ( $code >= 500 ) {
-			return new \WP_Error( 'server_error', $this->error_message( $body, __( 'The provider returned a server error.', 'ai-media-search' ) ) );
+			return new \WP_Error( 'server_error', $this->error_message( $body, __( 'The provider returned a server error.', 'sightdex-media-search' ) ) );
 		}
 		if ( 200 !== $code ) {
-			return new \WP_Error( 'bad_response', $this->error_message( $body, sprintf( /* translators: %d: HTTP status */ __( 'Unexpected HTTP status %d.', 'ai-media-search' ), $code ) ) );
+			return new \WP_Error( 'bad_response', $this->error_message( $body, sprintf( /* translators: %d: HTTP status */ __( 'Unexpected HTTP status %d.', 'sightdex-media-search' ), $code ) ) );
 		}
 
 		$data = json_decode( $body, true );
 		if ( ! is_array( $data ) ) {
-			return new \WP_Error( 'bad_response', __( 'The provider reply was not valid JSON.', 'ai-media-search' ) );
+			return new \WP_Error( 'bad_response', __( 'The provider reply was not valid JSON.', 'sightdex-media-search' ) );
 		}
 		return $data;
 	}

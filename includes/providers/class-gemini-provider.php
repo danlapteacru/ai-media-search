@@ -19,16 +19,16 @@ final class Gemini_Provider extends Abstract_Provider {
 	}
 
 	public static function get_label(): string {
-		return __( 'Google Gemini', 'ai-media-search' );
+		return __( 'Google Gemini', 'sightdex-media-search' );
 	}
 
 	public static function get_known_models(): array {
 		return array(
-			'gemini-3.8-flash'      => __( 'Latest Flash, about $0.002 per image', 'ai-media-search' ),
-			'gemini-3.5-flash-lite' => __( 'Flash-Lite, about $0.001 per image', 'ai-media-search' ),
-			'gemini-2.5-flash'      => __( 'Previous Flash, about $0.001 per image', 'ai-media-search' ),
-			'gemini-2.5-flash-lite' => __( 'Cheapest, under $0.001 per image', 'ai-media-search' ),
-			'gemini-2.5-pro'        => __( 'Pro, about $0.005 per image', 'ai-media-search' ),
+			'gemini-3.8-flash'      => __( 'Latest Flash, about $0.002 per image', 'sightdex-media-search' ),
+			'gemini-3.5-flash-lite' => __( 'Flash-Lite, about $0.001 per image', 'sightdex-media-search' ),
+			'gemini-2.5-flash'      => __( 'Previous Flash, about $0.001 per image', 'sightdex-media-search' ),
+			'gemini-2.5-flash-lite' => __( 'Cheapest, under $0.001 per image', 'sightdex-media-search' ),
+			'gemini-2.5-pro'        => __( 'Pro, about $0.005 per image', 'sightdex-media-search' ),
 		);
 	}
 
@@ -88,17 +88,17 @@ final class Gemini_Provider extends Abstract_Provider {
 	protected function extract_text( array $data ) {
 		if ( empty( $data['candidates'] ) ) {
 			if ( ! empty( $data['promptFeedback']['blockReason'] ) ) {
-				return new \WP_Error( 'refused', __( 'The model declined to describe this image.', 'ai-media-search' ) );
+				return new \WP_Error( 'refused', __( 'The model declined to describe this image.', 'sightdex-media-search' ) );
 			}
-			return new \WP_Error( 'bad_response', __( 'The reply contained no candidates.', 'ai-media-search' ) );
+			return new \WP_Error( 'bad_response', __( 'The reply contained no candidates.', 'sightdex-media-search' ) );
 		}
 
 		$candidate = $data['candidates'][0] ?? null;
 		if ( ! is_array( $candidate ) ) {
-			return new \WP_Error( 'bad_response', __( 'The reply contained no candidates.', 'ai-media-search' ) );
+			return new \WP_Error( 'bad_response', __( 'The reply contained no candidates.', 'sightdex-media-search' ) );
 		}
 		if ( 'SAFETY' === ( $candidate['finishReason'] ?? '' ) ) {
-			return new \WP_Error( 'refused', __( 'The model declined to describe this image.', 'ai-media-search' ) );
+			return new \WP_Error( 'refused', __( 'The model declined to describe this image.', 'sightdex-media-search' ) );
 		}
 
 		foreach ( (array) ( $candidate['content']['parts'] ?? array() ) as $part ) {
@@ -106,6 +106,6 @@ final class Gemini_Provider extends Abstract_Provider {
 				return $part['text'];
 			}
 		}
-		return new \WP_Error( 'bad_response', __( 'The reply contained no text.', 'ai-media-search' ) );
+		return new \WP_Error( 'bad_response', __( 'The reply contained no text.', 'sightdex-media-search' ) );
 	}
 }

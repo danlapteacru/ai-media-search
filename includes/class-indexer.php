@@ -50,12 +50,12 @@ class Indexer {
 	 */
 	public function index_attachment( int $id ) {
 		if ( 'attachment' !== get_post_type( $id ) ) {
-			return new \WP_Error( 'not_found', __( 'Attachment not found.', 'ai-media-search' ) );
+			return new \WP_Error( 'not_found', __( 'Attachment not found.', 'sightdex-media-search' ) );
 		}
 
 		$lock = 'aims_lock_' . $id;
 		if ( get_transient( $lock ) ) {
-			return new \WP_Error( 'locked', __( 'This file is already being processed.', 'ai-media-search' ) );
+			return new \WP_Error( 'locked', __( 'This file is already being processed.', 'sightdex-media-search' ) );
 		}
 		set_transient( $lock, 1, self::LOCK_TTL );
 

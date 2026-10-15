@@ -19,14 +19,14 @@ final class Claude_Provider extends Abstract_Provider {
 	}
 
 	public static function get_label(): string {
-		return __( 'Anthropic Claude', 'ai-media-search' );
+		return __( 'Anthropic Claude', 'sightdex-media-search' );
 	}
 
 	public static function get_known_models(): array {
 		return array(
-			'claude-opus-5'    => __( 'Highest quality, about $0.015 per image', 'ai-media-search' ),
-			'claude-sonnet-5'  => __( 'Balanced, about $0.006 per image', 'ai-media-search' ),
-			'claude-haiku-4-5' => __( 'Fastest and cheapest, about $0.003 per image', 'ai-media-search' ),
+			'claude-opus-5'    => __( 'Highest quality, about $0.015 per image', 'sightdex-media-search' ),
+			'claude-sonnet-5'  => __( 'Balanced, about $0.006 per image', 'sightdex-media-search' ),
+			'claude-haiku-4-5' => __( 'Fastest and cheapest, about $0.003 per image', 'sightdex-media-search' ),
 		);
 	}
 
@@ -94,13 +94,13 @@ final class Claude_Provider extends Abstract_Provider {
 
 	protected function extract_text( array $data ) {
 		if ( 'refusal' === ( $data['stop_reason'] ?? '' ) ) {
-			return new \WP_Error( 'refused', __( 'The model declined to describe this image.', 'ai-media-search' ) );
+			return new \WP_Error( 'refused', __( 'The model declined to describe this image.', 'sightdex-media-search' ) );
 		}
 		foreach ( (array) ( $data['content'] ?? array() ) as $block ) {
 			if ( isset( $block['type'], $block['text'] ) && 'text' === $block['type'] ) {
 				return (string) $block['text'];
 			}
 		}
-		return new \WP_Error( 'bad_response', __( 'The reply contained no text.', 'ai-media-search' ) );
+		return new \WP_Error( 'bad_response', __( 'The reply contained no text.', 'sightdex-media-search' ) );
 	}
 }

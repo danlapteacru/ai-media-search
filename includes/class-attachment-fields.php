@@ -23,15 +23,15 @@ final class Attachment_Fields {
 	public static function status_label( string $status ): string {
 		switch ( $status ) {
 			case Indexer::STATUS_INDEXED:
-				return __( 'Indexed', 'ai-media-search' );
+				return __( 'Indexed', 'sightdex-media-search' );
 			case Indexer::STATUS_FAILED:
-				return __( 'Failed', 'ai-media-search' );
+				return __( 'Failed', 'sightdex-media-search' );
 			case Indexer::STATUS_SKIPPED:
-				return __( 'Skipped', 'ai-media-search' );
+				return __( 'Skipped', 'sightdex-media-search' );
 			case Indexer::STATUS_PENDING:
-				return __( 'Pending', 'ai-media-search' );
+				return __( 'Pending', 'sightdex-media-search' );
 			default:
-				return __( 'Not indexed', 'ai-media-search' );
+				return __( 'Not indexed', 'sightdex-media-search' );
 		}
 	}
 
@@ -61,22 +61,22 @@ final class Attachment_Fields {
 		$payload = Indexer::payload( (int) $post->ID );
 
 		$fields['aims_description'] = array(
-			'label' => __( 'AI description', 'ai-media-search' ),
+			'label' => __( 'AI description', 'sightdex-media-search' ),
 			'input' => 'textarea',
 			'value' => $payload['description'],
-			'helps' => __( 'Used by the media search. Edit it to correct the AI.', 'ai-media-search' ),
+			'helps' => __( 'Used by the media search. Edit it to correct the AI.', 'sightdex-media-search' ),
 		);
 		$fields['aims_tags']        = array(
-			'label' => __( 'AI tags', 'ai-media-search' ),
+			'label' => __( 'AI tags', 'sightdex-media-search' ),
 			'input' => 'html',
 			'html'  => '<p class="aims-tags" data-id="' . esc_attr( (string) $post->ID ) . '">' . esc_html( implode( ', ', $payload['tags'] ) ) . '</p>',
 		);
 		$fields['aims_status']      = array(
-			'label' => __( 'AI index', 'ai-media-search' ),
+			'label' => __( 'AI index', 'sightdex-media-search' ),
 			'input' => 'html',
 			'html'  => '<span class="aims-status-wrap" data-id="' . esc_attr( (string) $post->ID ) . '">' . self::status_html( $payload ) . '</span> '
 				. '<button type="button" class="button button-small aims-regenerate" data-id="' . esc_attr( (string) $post->ID ) . '">'
-				. esc_html__( 'Regenerate', 'ai-media-search' ) . '</button>',
+				. esc_html__( 'Regenerate', 'sightdex-media-search' ) . '</button>',
 		);
 		return $fields;
 	}
@@ -95,7 +95,7 @@ final class Attachment_Fields {
 	}
 
 	public function column( $columns ) {
-		$columns['aims_status'] = __( 'AI index', 'ai-media-search' );
+		$columns['aims_status'] = __( 'AI index', 'sightdex-media-search' );
 		return $columns;
 	}
 
@@ -108,7 +108,7 @@ final class Attachment_Fields {
 	}
 
 	public function bulk_action( $actions ) {
-		$actions['aims_index'] = __( 'Index with AI', 'ai-media-search' );
+		$actions['aims_index'] = __( 'Index with AI', 'sightdex-media-search' );
 		return $actions;
 	}
 
@@ -139,7 +139,7 @@ final class Attachment_Fields {
 		$count = (int) $_GET['aims_queued']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		echo '<div class="notice notice-success is-dismissible"><p>'
 			/* translators: %d: number of files */
-			. esc_html( sprintf( _n( '%d file queued for AI indexing.', '%d files queued for AI indexing.', $count, 'ai-media-search' ), $count ) )
+			. esc_html( sprintf( _n( '%d file queued for AI indexing.', '%d files queued for AI indexing.', $count, 'sightdex-media-search' ), $count ) )
 			. '</p></div>';
 	}
 }

@@ -12,7 +12,7 @@ use AIMS\Providers\Registry;
 defined( 'ABSPATH' ) || exit;
 
 final class Admin_Page {
-	const SLUG     = 'ai-media-search';
+	const SLUG     = 'sightdex-media-search';
 	const PER_PAGE = 50;
 	const FILTERS  = array( 'all', 'indexed', 'not_indexed', 'failed', 'skipped' );
 
@@ -24,8 +24,8 @@ final class Admin_Page {
 
 	public function menu(): void {
 		add_menu_page(
-			__( 'AI Media Search', 'ai-media-search' ),
-			__( 'AI Media Search', 'ai-media-search' ),
+			__( 'Sightdex Media Search', 'sightdex-media-search' ),
+			__( 'Sightdex Media Search', 'sightdex-media-search' ),
 			'manage_options',
 			self::SLUG,
 			array( $this, 'render' ),
@@ -59,14 +59,14 @@ final class Admin_Page {
 				'batchSize' => (int) Settings::get( 'batch_size' ),
 				'hasKey'    => '' !== Settings::get_api_key( (string) Settings::get( 'provider' ) ),
 				'i18n'      => array(
-					'working'      => __( 'Working…', 'ai-media-search' ),
-					'done'         => __( 'Done.', 'ai-media-search' ),
-					'stopped'      => __( 'Stopped.', 'ai-media-search' ),
-					'failed'       => __( 'Request failed.', 'ai-media-search' ),
-					'regenerate'   => __( 'Regenerate', 'ai-media-search' ),
-					'index'        => __( 'Index', 'ai-media-search' ),
-					'progress'     => /* translators: 1: done count, 2: total count */ __( '%1$s of %2$s', 'ai-media-search' ),
-					'noSelection'  => __( 'Select at least one file first.', 'ai-media-search' ),
+					'working'      => __( 'Working…', 'sightdex-media-search' ),
+					'done'         => __( 'Done.', 'sightdex-media-search' ),
+					'stopped'      => __( 'Stopped.', 'sightdex-media-search' ),
+					'failed'       => __( 'Request failed.', 'sightdex-media-search' ),
+					'regenerate'   => __( 'Regenerate', 'sightdex-media-search' ),
+					'index'        => __( 'Index', 'sightdex-media-search' ),
+					'progress'     => /* translators: 1: done count, 2: total count */ __( '%1$s of %2$s', 'sightdex-media-search' ),
+					'noSelection'  => __( 'Select at least one file first.', 'sightdex-media-search' ),
 					'statusLabels' => array(
 						Indexer::STATUS_INDEXED => Attachment_Fields::status_label( Indexer::STATUS_INDEXED ),
 						Indexer::STATUS_FAILED  => Attachment_Fields::status_label( Indexer::STATUS_FAILED ),
@@ -116,18 +116,18 @@ final class Admin_Page {
 
 	public function render(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to view this page.', 'ai-media-search' ) );
+			wp_die( esc_html__( 'You do not have permission to view this page.', 'sightdex-media-search' ) );
 		}
 		$settings = Settings::all();
 		$has_key  = '' !== Settings::get_api_key( $settings['provider'] );
 		?>
 		<div class="wrap aims-wrap">
-			<h1><?php esc_html_e( 'AI Media Search', 'ai-media-search' ); ?></h1>
-			<p class="description"><?php esc_html_e( 'Describe your images with AI so the Media Library search finds them by what is in the picture.', 'ai-media-search' ); ?></p>
+			<h1><?php esc_html_e( 'Sightdex Media Search', 'sightdex-media-search' ); ?></h1>
+			<p class="description"><?php esc_html_e( 'Describe your images with AI so the Media Library search finds them by what is in the picture.', 'sightdex-media-search' ); ?></p>
 
 			<nav class="nav-tab-wrapper aims-tabs">
-				<a href="#dashboard" class="nav-tab nav-tab-active aims-tab" data-tab="dashboard"><?php esc_html_e( 'Dashboard', 'ai-media-search' ); ?></a>
-				<a href="#settings" class="nav-tab aims-tab" data-tab="settings"><?php esc_html_e( 'Settings', 'ai-media-search' ); ?></a>
+				<a href="#dashboard" class="nav-tab nav-tab-active aims-tab" data-tab="dashboard"><?php esc_html_e( 'Dashboard', 'sightdex-media-search' ); ?></a>
+				<a href="#settings" class="nav-tab aims-tab" data-tab="settings"><?php esc_html_e( 'Settings', 'sightdex-media-search' ); ?></a>
 			</nav>
 
 			<div id="aims-tab-dashboard" class="aims-tab-panel">
@@ -148,17 +148,17 @@ final class Admin_Page {
 		$counts = Stats::counts();
 
 		$cards = array(
-			'all'         => array( __( 'All files', 'ai-media-search' ), $counts['total'] ),
-			'indexed'     => array( __( 'Indexed', 'ai-media-search' ), $counts['indexed'] ),
-			'not_indexed' => array( __( 'Not indexed', 'ai-media-search' ), $counts['not_indexed'] ),
-			'failed'      => array( __( 'Failed', 'ai-media-search' ), $counts['failed'] ),
-			'skipped'     => array( __( 'Skipped', 'ai-media-search' ), $counts['skipped'] ),
+			'all'         => array( __( 'All files', 'sightdex-media-search' ), $counts['total'] ),
+			'indexed'     => array( __( 'Indexed', 'sightdex-media-search' ), $counts['indexed'] ),
+			'not_indexed' => array( __( 'Not indexed', 'sightdex-media-search' ), $counts['not_indexed'] ),
+			'failed'      => array( __( 'Failed', 'sightdex-media-search' ), $counts['failed'] ),
+			'skipped'     => array( __( 'Skipped', 'sightdex-media-search' ), $counts['skipped'] ),
 		);
 
 		if ( ! $has_key ) {
-			$link = '<a href="#settings" class="aims-tab-link">' . esc_html__( 'Settings tab', 'ai-media-search' ) . '</a>';
+			$link = '<a href="#settings" class="aims-tab-link">' . esc_html__( 'Settings tab', 'sightdex-media-search' ) . '</a>';
 			/* translators: %s: "Settings tab" link */
-			$html         = sprintf( esc_html__( 'Add an API key on the %s before indexing.', 'ai-media-search' ), $link );
+			$html         = sprintf( esc_html__( 'Add an API key on the %s before indexing.', 'sightdex-media-search' ), $link );
 			$allowed_html = array(
 				'a' => array(
 					'href'  => array(),
@@ -199,22 +199,22 @@ final class Admin_Page {
 			<thead>
 				<tr>
 					<td class="check-column"><input type="checkbox" id="aims-select-all" /></td>
-					<th><?php esc_html_e( 'File', 'ai-media-search' ); ?></th>
-					<th><?php esc_html_e( 'AI description', 'ai-media-search' ); ?></th>
-					<th><?php esc_html_e( 'Tags', 'ai-media-search' ); ?></th>
-					<th><?php esc_html_e( 'Status', 'ai-media-search' ); ?></th>
-					<th><?php esc_html_e( 'Actions', 'ai-media-search' ); ?></th>
+					<th><?php esc_html_e( 'File', 'sightdex-media-search' ); ?></th>
+					<th><?php esc_html_e( 'AI description', 'sightdex-media-search' ); ?></th>
+					<th><?php esc_html_e( 'Tags', 'sightdex-media-search' ); ?></th>
+					<th><?php esc_html_e( 'Status', 'sightdex-media-search' ); ?></th>
+					<th><?php esc_html_e( 'Actions', 'sightdex-media-search' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
 			<?php if ( ! $query->have_posts() ) : ?>
-				<tr><td colspan="6"><?php esc_html_e( 'No files match this filter.', 'ai-media-search' ); ?></td></tr>
+				<tr><td colspan="6"><?php esc_html_e( 'No files match this filter.', 'sightdex-media-search' ); ?></td></tr>
 			<?php endif; ?>
 			<?php
 			foreach ( $query->posts as $post ) :
 				$id      = (int) $post->ID;
 				$payload = Indexer::payload( $id );
-				$button  = Indexer::STATUS_INDEXED === $payload['status'] ? __( 'Regenerate', 'ai-media-search' ) : __( 'Index', 'ai-media-search' );
+				$button  = Indexer::STATUS_INDEXED === $payload['status'] ? __( 'Regenerate', 'sightdex-media-search' ) : __( 'Index', 'sightdex-media-search' );
 				?>
 				<tr class="aims-row" data-id="<?php echo esc_attr( (string) $id ); ?>">
 					<th scope="row" class="check-column"><input type="checkbox" class="aims-select" value="<?php echo esc_attr( (string) $id ); ?>" /></th>
@@ -228,7 +228,7 @@ final class Admin_Page {
 					<td class="aims-status-cell"><span class="aims-status-wrap" data-id="<?php echo esc_attr( (string) $id ); ?>"><?php echo Attachment_Fields::status_html( $payload ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span></td>
 					<td class="aims-actions">
 						<button type="button" class="button button-small aims-index-one" data-id="<?php echo esc_attr( (string) $id ); ?>" <?php disabled( ! $has_key ); ?>><?php echo esc_html( $button ); ?></button>
-						<a class="aims-edit" href="<?php echo esc_url( (string) get_edit_post_link( $id ) ); ?>"><?php esc_html_e( 'Edit', 'ai-media-search' ); ?></a>
+						<a class="aims-edit" href="<?php echo esc_url( (string) get_edit_post_link( $id ) ); ?>"><?php esc_html_e( 'Edit', 'sightdex-media-search' ); ?></a>
 					</td>
 				</tr>
 			<?php endforeach; ?>
@@ -257,10 +257,10 @@ final class Admin_Page {
 		}
 		?>
 		<div class="aims-controls">
-			<button type="button" class="button button-primary" id="aims-index-selected" <?php disabled( ! $has_key ); ?>><?php esc_html_e( 'Index selected', 'ai-media-search' ); ?></button>
-			<button type="button" class="button" id="aims-index-all" <?php disabled( ! $has_key ); ?>><?php esc_html_e( 'Index all not indexed', 'ai-media-search' ); ?></button>
-			<label><input type="checkbox" id="aims-retry-failed" /> <?php esc_html_e( 'Also retry failed', 'ai-media-search' ); ?></label>
-			<button type="button" class="button" id="aims-stop" disabled><?php esc_html_e( 'Stop', 'ai-media-search' ); ?></button>
+			<button type="button" class="button button-primary" id="aims-index-selected" <?php disabled( ! $has_key ); ?>><?php esc_html_e( 'Index selected', 'sightdex-media-search' ); ?></button>
+			<button type="button" class="button" id="aims-index-all" <?php disabled( ! $has_key ); ?>><?php esc_html_e( 'Index all not indexed', 'sightdex-media-search' ); ?></button>
+			<label><input type="checkbox" id="aims-retry-failed" /> <?php esc_html_e( 'Also retry failed', 'sightdex-media-search' ); ?></label>
+			<button type="button" class="button" id="aims-stop" disabled><?php esc_html_e( 'Stop', 'sightdex-media-search' ); ?></button>
 			<span id="aims-progress-text" class="aims-muted"></span>
 			<div class="aims-progress"><div class="aims-progress-bar" id="aims-progress-bar"></div></div>
 			<ul id="aims-log" class="aims-log"></ul>
@@ -271,12 +271,12 @@ final class Admin_Page {
 	private function render_settings( array $settings ): void {
 		settings_errors( 'aims_settings_group' );
 		?>
-		<div class="notice notice-info inline"><p><?php esc_html_e( 'Images and PDF previews are sent to the selected third-party API for analysis. Check the provider\'s terms and privacy policy before enabling.', 'ai-media-search' ); ?></p></div>
+		<div class="notice notice-info inline"><p><?php esc_html_e( 'Images and PDF previews are sent to the selected third-party API for analysis. Check the provider\'s terms and privacy policy before enabling.', 'sightdex-media-search' ); ?></p></div>
 		<form method="post" action="options.php" class="aims-settings-form">
 			<?php settings_fields( 'aims_settings_group' ); ?>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Provider', 'ai-media-search' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Provider', 'sightdex-media-search' ); ?></th>
 					<td>
 						<?php foreach ( Registry::labels() as $id => $label ) : ?>
 							<label class="aims-provider-choice">
@@ -300,54 +300,54 @@ final class Admin_Page {
 						<th scope="row"><?php echo esc_html( $label ); ?></th>
 						<td>
 							<p>
-								<label for="aims-key-<?php echo esc_attr( $id ); ?>"><?php esc_html_e( 'API key', 'ai-media-search' ); ?></label><br />
+								<label for="aims-key-<?php echo esc_attr( $id ); ?>"><?php esc_html_e( 'API key', 'sightdex-media-search' ); ?></label><br />
 								<input type="password" class="regular-text" id="aims-key-<?php echo esc_attr( $id ); ?>" name="aims_settings[api_keys][<?php echo esc_attr( $id ); ?>]" value="" autocomplete="off"
-									placeholder="<?php echo esc_attr( $key_set ? __( 'Saved. Paste a new key to replace it.', 'ai-media-search' ) : __( 'Paste your API key', 'ai-media-search' ) ); ?>" />
+									placeholder="<?php echo esc_attr( $key_set ? __( 'Saved. Paste a new key to replace it.', 'sightdex-media-search' ) : __( 'Paste your API key', 'sightdex-media-search' ) ); ?>" />
 							</p>
 							<p>
-								<label for="aims-model-<?php echo esc_attr( $id ); ?>"><?php esc_html_e( 'Model', 'ai-media-search' ); ?></label><br />
+								<label for="aims-model-<?php echo esc_attr( $id ); ?>"><?php esc_html_e( 'Model', 'sightdex-media-search' ); ?></label><br />
 								<select id="aims-model-<?php echo esc_attr( $id ); ?>" class="aims-model-select" name="aims_settings[models][<?php echo esc_attr( $id ); ?>]">
 									<?php foreach ( $known as $model_id => $hint ) : ?>
 										<option value="<?php echo esc_attr( $model_id ); ?>" <?php selected( ! $is_custom && $model === $model_id ); ?>><?php echo esc_html( $model_id . ' — ' . $hint ); ?></option>
 									<?php endforeach; ?>
-									<option value="custom" <?php selected( $is_custom ); ?>><?php esc_html_e( 'Custom model ID…', 'ai-media-search' ); ?></option>
+									<option value="custom" <?php selected( $is_custom ); ?>><?php esc_html_e( 'Custom model ID…', 'sightdex-media-search' ); ?></option>
 								</select>
 								<input type="text" class="regular-text aims-custom-model" name="aims_settings[custom_models][<?php echo esc_attr( $id ); ?>]"
 									value="<?php echo esc_attr( $is_custom && 'custom' !== $model ? $model : $settings['custom_models'][ $id ] ); ?>"
-									placeholder="<?php esc_attr_e( 'exact model id', 'ai-media-search' ); ?>" <?php echo $is_custom ? '' : 'hidden'; ?> />
+									placeholder="<?php esc_attr_e( 'exact model id', 'sightdex-media-search' ); ?>" <?php echo $is_custom ? '' : 'hidden'; ?> />
 							</p>
 						</td>
 					</tr>
 				<?php endforeach; ?>
 				<tr>
-					<th scope="row"><label for="aims-language"><?php esc_html_e( 'Description language', 'ai-media-search' ); ?></label></th>
+					<th scope="row"><label for="aims-language"><?php esc_html_e( 'Description language', 'sightdex-media-search' ); ?></label></th>
 					<td><input type="text" id="aims-language" class="regular-text" name="aims_settings[language]" value="<?php echo esc_attr( $settings['language'] ); ?>" /></td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="aims-custom-prompt"><?php esc_html_e( 'Custom prompt', 'ai-media-search' ); ?></label></th>
+					<th scope="row"><label for="aims-custom-prompt"><?php esc_html_e( 'Custom prompt', 'sightdex-media-search' ); ?></label></th>
 					<td>
 						<textarea id="aims-custom-prompt" class="large-text" rows="5" name="aims_settings[custom_prompt]"><?php echo esc_textarea( $settings['custom_prompt'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'Optional extra guidance added to every request, for example product names or house style.', 'ai-media-search' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Optional extra guidance added to every request, for example product names or house style.', 'sightdex-media-search' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Automation', 'ai-media-search' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Automation', 'sightdex-media-search' ); ?></th>
 					<td>
-						<label><input type="checkbox" name="aims_settings[auto_index]" value="1" <?php checked( $settings['auto_index'] ); ?> /> <?php esc_html_e( 'Describe new uploads automatically', 'ai-media-search' ); ?></label><br />
-						<label><input type="checkbox" name="aims_settings[fill_alt]" value="1" <?php checked( $settings['fill_alt'] ); ?> /> <?php esc_html_e( 'Fill empty alt text with the AI alt sentence', 'ai-media-search' ); ?></label>
+						<label><input type="checkbox" name="aims_settings[auto_index]" value="1" <?php checked( $settings['auto_index'] ); ?> /> <?php esc_html_e( 'Describe new uploads automatically', 'sightdex-media-search' ); ?></label><br />
+						<label><input type="checkbox" name="aims_settings[fill_alt]" value="1" <?php checked( $settings['fill_alt'] ); ?> /> <?php esc_html_e( 'Fill empty alt text with the AI alt sentence', 'sightdex-media-search' ); ?></label>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="aims-batch-size"><?php esc_html_e( 'Batch size', 'ai-media-search' ); ?></label></th>
+					<th scope="row"><label for="aims-batch-size"><?php esc_html_e( 'Batch size', 'sightdex-media-search' ); ?></label></th>
 					<td>
 						<input type="number" id="aims-batch-size" min="1" max="10" name="aims_settings[batch_size]" value="<?php echo esc_attr( (string) $settings['batch_size'] ); ?>" />
-						<p class="description"><?php esc_html_e( 'Files described per request when indexing from the dashboard.', 'ai-media-search' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Files described per request when indexing from the dashboard.', 'sightdex-media-search' ); ?></p>
 					</td>
 				</tr>
 			</table>
 			<p class="submit">
-				<?php submit_button( __( 'Save settings', 'ai-media-search' ), 'primary', 'submit', false ); ?>
-				<button type="button" class="button" id="aims-test"><?php esc_html_e( 'Test connection', 'ai-media-search' ); ?></button>
+				<?php submit_button( __( 'Save settings', 'sightdex-media-search' ), 'primary', 'submit', false ); ?>
+				<button type="button" class="button" id="aims-test"><?php esc_html_e( 'Test connection', 'sightdex-media-search' ); ?></button>
 				<span id="aims-test-result" class="aims-muted"></span>
 			</p>
 		</form>
